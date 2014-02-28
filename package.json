@@ -5,7 +5,7 @@
   "main": "dist/koui.js",
   "scripts": {
 	"install": "bower install && tsd reinstall",
-    "test": "grunt"
+    "test": "grunt test"
   },
   "repository": {
     "type": "git",
@@ -36,7 +36,7 @@
 	"grunt-nuget": ">=0.1.1",
 	"grunt-typescript": ">=0.2.7",
 	"grunt-tsdamdconcat": ">=0.1.0",
-	"grunt-tslint": ">=0.4.0",
+	"grunt-tslint": ">=0.4.1",
 	"load-grunt-tasks": ">=0.3.0",
 	"time-grunt": ">=0.2.9"
   },
