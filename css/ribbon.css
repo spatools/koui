@@ -347,7 +347,7 @@
 }
 .sprite-ribbon {
   background: transparent no-repeat;
-  background-image: url(../assets/sprite-ribbon.png);
+  background-image: url("../assets/sprite-ribbon.png");
 }
 .sprite-ribbon.accept {
   width: 32px;

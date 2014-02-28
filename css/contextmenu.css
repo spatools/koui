@@ -114,10 +114,10 @@
   background-repeat: no-repeat;
 }
 .ui-context ul li .inner .icon-bar .icon.page {
-  background-image: url(../images/page.png);
+  background-image: url('../images/page.png');
 }
 .ui-context ul li .inner .icon-bar .icon.folder {
-  background-image: url(../images/folder.png);
+  background-image: url('../images/folder.png');
 }
 .ui-context ul li .inner label {
   display: block;
@@ -130,7 +130,7 @@
   padding-left: 5px;
 }
 .ui-context ul li .inner label.parent {
-  background-image: url(../assets/arrow-right.png);
+  background-image: url("../assets/arrow-right.png");
   background-repeat: no-repeat;
   background-position: 100% 50%;
 }

@@ -70,7 +70,7 @@
   display: inline-block;
   background-repeat: no-repeat;
   vertical-align: middle;
-  background-image: url(../assets/folder-arrow.png);
+  background-image: url("../assets/folder-arrow.png");
 }
 .ui-tree li .node .handle.hover {
   background-position: -16px 0;
@@ -121,10 +121,10 @@
   cursor: pointer;
 }
 .ui-tree .icon.folder {
-  background-image: url(../assets/folder.png);
+  background-image: url("../assets/folder.png");
 }
 .ui-tree .icon.page {
-  background-image: url(../assets/page.png);
+  background-image: url("../assets/page.png");
 }
 /* drag icon */
 .drag-icon {
@@ -151,8 +151,8 @@
   height: 35px;
 }
 .drag-icon .folder {
-  background-image: url(../assets/folder-large.png);
+  background-image: url("../assets/folder-large.png");
 }
 .drag-icon .page {
-  background-image: url(../assets/page-large.png);
+  background-image: url("../assets/page-large.png");
 }
