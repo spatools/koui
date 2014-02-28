@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>KoUI - Tests</title>
+    <link rel="stylesheet" type="text/css" href="../bower_components/mocha/mocha.css" />
+</head>
+<body>
+    <div id="mocha"></div>
+
+    <script type="text/javascript" src="../bower_components/mocha/mocha.js"></script>
+    <script type="text/javascript">
+        mocha.setup({
+            ui: 'bdd',
+            ignoreLeaks: true
+        });
+    </script>
+    <script type="text/javascript" src="../bower_components/sinon/index.js"></script>
+    <script type="text/javascript" src="../bower_components/should/should.js"></script>
+    <script type="text/javascript" src="../bower_components/requirejs/require.js" data-main="config"></script>
+</body>
+</html>

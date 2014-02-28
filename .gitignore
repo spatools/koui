@@ -11,6 +11,8 @@
 # Keep only ts file in src folder
 src/*.js
 src/*.js.map
+samples/*.js
+samples/*.js.map
 test/*.js
 test/*.js.map
 test/helpers/*.d.ts
