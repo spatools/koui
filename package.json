@@ -1,0 +1,46 @@
+﻿{
+  "name": "koui",
+  "version": "0.1.0",
+  "description": "Knockout UI widgets to help Knockout app development",
+  "main": "dist/koui.js",
+  "scripts": {
+	"install": "bower install && tsd reinstall",
+    "test": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spatools/koui.git"
+  },
+  "keywords": [
+    "knockout",
+    "knockoutjs",
+    "ko",
+    "UI",
+    "binding",
+    "handlers",
+    "template",
+    "engine",
+    "spatools",
+    "amd"
+  ],
+  "devDependencies": {
+	"grunt": ">=0.4.2",
+	"grunt-contrib-clean": ">=0.5.0",
+	"grunt-contrib-concat": ">=0.3.0",
+	"grunt-contrib-connect": ">=0.6.0",
+	"grunt-contrib-jshint": ">=0.8.0",
+	"grunt-contrib-watch": ">=0.5.3",
+	"grunt-mocha": ">=0.4.10",
+	"grunt-nuget": ">=0.1.1",
+	"grunt-typescript": ">=0.2.7",
+	"grunt-tsdamdconcat": ">=0.1.0",
+	"grunt-tslint": ">=0.4.0",
+	"load-grunt-tasks": ">=0.3.0",
+	"time-grunt": ">=0.2.9"
+  },
+  "author": "SPA Tools",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/spatools/koui/issues"
+  }
+}
