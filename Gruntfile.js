@@ -15,6 +15,8 @@ module.exports = function (grunt) {
         paths: {
             src: 'src',
             build: 'dist',
+            less: 'less',
+            css: 'css',
             temp: '.temp',
             test: 'test'
         },
@@ -55,6 +57,20 @@ module.exports = function (grunt) {
             }
         },
 
+        less: {
+            dist: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= paths.less %>/',
+                        src: ['*.less', '!variables.less', '!mixins.less'],
+                        dest: '<%= paths.css %>/',
+                        ext: '.css'
+                    }
+                ]
+            }
+        },
+
         concat: {
             declaration: {
                 src: [
@@ -62,6 +78,15 @@ module.exports = function (grunt) {
                     "<%= paths.temp %>/temp.d.ts"
                 ],
                 dest: "<%= paths.build %>/koui.d.ts"
+            }
+        },
+
+        copy: {
+            dist: {
+                expand: true,
+                cwd: "<%= paths.src %>/",
+                src: "**/*.html",
+                dest: "<%= paths.build %>/"
             }
         },
 
@@ -180,7 +205,7 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask("declaration", ["typescript:declaration", "tsdamdconcat:declaration", "concat:declaration", "clean:temp", "fixdecla"]);
-    grunt.registerTask("build", ["tslint:dev", "typescript:dist", "jshint:dist", "declaration"]);
+    grunt.registerTask("build", ["tslint:dev", "typescript:dist", "jshint:dist", "copy:dist", "less:dist", "declaration"]);
     grunt.registerTask("dev", ["tslint:dev", "typescript:dev", "jshint:dev"]);
     grunt.registerTask("test", ["dev", "tslint:test", "typescript:test", "jshint:test", "mocha:test", "clean"]);
     grunt.registerTask("nuget", ["nugetpack", "nugetpush"]);
