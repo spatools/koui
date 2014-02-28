@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>KoUI</id>
+    <version>0.1.0</version>
+    <authors>SPA Tools</authors>
+    <owners>SPA Tools</owners>
+    <licenseUrl>https://github.com/spatools/koui/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/spatools/koui</projectUrl>
+    <iconUrl>http://www.gravatar.com/avatar/6ef2fbcb91a9299ffb3c918b50d038d4.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Knockout UI widgets to help Knockout app development
+    </description>
+    <releaseNotes>
+      You can see release notes at :
+      https://github.com/spatools/koui
+    </releaseNotes>
+    <copyright>Copyright 2014 - SPA Tools</copyright>
+    <tags>
+      Knockout,
+      UI,
+      Binding,
+      Handlers,
+      Engine,
+      TinyMCE,
+      AMD
+    </tags>
+    <dependencies>
+      <dependency id="KoUtils" version="0.1.5" />
+      <dependency id="JQuery" version="1.9.0" />
+      <dependency id="RequireJS.Text" version="2.1.6" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\dist\contextmenu.js" target="Content\Scripts\koui" />
+    <file src="..\dist\contextmenu\container.html" target="Content\Scripts\koui\contextmenu" />
+    <file src="..\dist\contextmenu\item.html" target="Content\Scripts\koui\contextmenu" />
+    <file src="..\dist\draggable.js" target="Content\Scripts\koui" />
+    <file src="..\dist\engine.js" target="Content\Scripts\koui" />
+    <file src="..\dist\ribbon.js" target="Content\Scripts\koui" />
+    <file src="..\dist\slider.js" target="Content\Scripts\koui" />
+    <file src="..\dist\slider\container.html" target="Content\Scripts\koui\slider" />
+    <file src="..\dist\tinymce.js" target="Content\Scripts\koui" />
+    <file src="..\dist\tree.js" target="Content\Scripts\koui" />
+    <file src="..\dist\tree\container.html" target="Content\Scripts\koui\tree" />
+    <file src="..\dist\tree\item.html" target="Content\Scripts\koui\tree" />
+    <file src="..\dist\utils.js" target="Content\Scripts\koui" />
+    <file src="..\dist\koui.d.ts" target="Content\Scripts\koui" />
+  </files>
+</package>
