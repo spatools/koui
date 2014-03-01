@@ -33,11 +33,13 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="..\dist\animation.js" target="Content\Scripts\koui" />
     <file src="..\dist\contextmenu.js" target="Content\Scripts\koui" />
     <file src="..\dist\contextmenu\container.html" target="Content\Scripts\koui\contextmenu" />
     <file src="..\dist\contextmenu\item.html" target="Content\Scripts\koui\contextmenu" />
     <file src="..\dist\draggable.js" target="Content\Scripts\koui" />
     <file src="..\dist\engine.js" target="Content\Scripts\koui" />
+    <file src="..\dist\event.js" target="Content\Scripts\koui" />
     <file src="..\dist\ribbon.js" target="Content\Scripts\koui" />
     <file src="..\dist\slider.js" target="Content\Scripts\koui" />
     <file src="..\dist\slider\container.html" target="Content\Scripts\koui\slider" />
