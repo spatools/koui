@@ -647,7 +647,7 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
         },
         update: function (element, valueAccessor) {
             var value = ko.unwrap(valueAccessor());
-            ko.renderTemplate("text!ui-tree-container-template.html", value, { templateEngine: engine.defaultInstance }, element);
+            ko.renderTemplate("text!koui/tree/container.html", value, { templateEngine: engine.defaultInstance }, element);
             value.recalculateSizes();
         }
     };
