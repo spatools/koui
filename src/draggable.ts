@@ -15,14 +15,14 @@ function round(nb: number): number {
     return Math.round(nb * 100) / 100;
 }
 
-function getCoefficient(container: JQuery): number {
-    var transform = container.get(0).transform;
-    return transform ? transform.getAttrs().scale[0] : 1;
+export function getCoefficient(container: JQuery): number {
+    //var transform = container.get(0).transform;
+    //return transform ? transform.getAttrs().scale[0] : 1;
+    return 1;
 }
 
 function getMousePosition(event: JQueryEventObject, container: JQuery): utils.Point {
     var offset = container.offset(),
-        transform = container.get(0).transform,
         coef = getCoefficient(container);
 
     if ((<any>event.originalEvent).touches) {
