@@ -6,12 +6,12 @@ define(["require", "exports", "knockout", "underscore", "jquery", "koutils/utils
     }
 
     function getCoefficient(container) {
-        var transform = container.get(0).transform;
-        return transform ? transform.getAttrs().scale[0] : 1;
+        return 1;
     }
+    exports.getCoefficient = getCoefficient;
 
     function getMousePosition(event, container) {
-        var offset = container.offset(), transform = container.get(0).transform, coef = getCoefficient(container);
+        var offset = container.offset(), coef = exports.getCoefficient(container);
 
         if (event.originalEvent.touches) {
             event = event.originalEvent.touches[0];
