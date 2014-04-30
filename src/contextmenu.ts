@@ -191,7 +191,7 @@ ko.bindingHandlers.contextmenu = {
             return;
         }
 
-        var onContextMenu = function (e : JQueryEventObject) {
+        var onContextMenu = function (e: JQueryEventObject) {
             if (value instanceof ContextMenuBuilder) {
                 config = value.build(e, parentVM);
                 menu = value.contextMenus.find(x => x.name() === config.name);
@@ -223,7 +223,8 @@ ko.bindingHandlers.contextmenu = {
             }
 
             return false;
-        }
+        };
+
         if (ko.unwrap(value.hasHandle)) {
             $("<div>").addClass("ui-context-handle").addClass(ko.unwrap(value.handleCssClass)).on("click", onContextMenu).appendTo($element);
         }

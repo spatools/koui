@@ -17,6 +17,9 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
             this.width = utils.createObservable(data.width, exports.defaults.width);
             this.name = utils.createObservable(data.name, "");
 
+            this.hasHandle = utils.createObservable(data.hasHandle, false);
+            this.handleCssClass = utils.createObservable(data.handleCssClass, "");
+
             _.each(data.items, function (item) {
                 _this.items.push(new ContextMenuItem(item, _this));
             });
@@ -116,7 +119,7 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
                 return;
             }
 
-            $element.addClass("nocontext").on("contextmenu", function (e) {
+            var onContextMenu = function (e) {
                 if (value instanceof ContextMenuBuilder) {
                     config = value.build(e, parentVM);
                     menu = value.contextMenus.find(function (x) {
@@ -147,7 +150,13 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
                 }
 
                 return false;
-            });
+            };
+
+            if (ko.unwrap(value.hasHandle)) {
+                $("<div>").addClass("ui-context-handle").addClass(ko.unwrap(value.handleCssClass)).on("click", onContextMenu).appendTo($element);
+            }
+
+            $element.addClass("nocontext").on("contextmenu", onContextMenu);
 
             $("html").click(function () {
                 $(".ui-context").remove();
