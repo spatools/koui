@@ -38,6 +38,8 @@ define(["knockout", "koui/contextmenu"], (ko, context) => {
 
     var menu = new context.ContextMenu({
         name: "test menu",
+        hasHandle: true,
+        handleCssClass: "test",
         items: [
             { text: "Add a new item", run: handleMenuClick },
             { text: "Edit this item", run: handleMenuClick },

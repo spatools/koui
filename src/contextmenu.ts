@@ -24,6 +24,8 @@ export interface ContextMenuConfiguration {
     cssClass?: any;
     width?: any;
     items: any;
+    hasHandle?: any;
+    handleCssClass?: any;
 }
 
 export class ContextMenu implements IMenuContainer {
@@ -35,6 +37,9 @@ export class ContextMenu implements IMenuContainer {
     public width: KnockoutObservable<number>;
     public zIndex: number;
 
+    public hasHandle: KnockoutObservable<boolean>;
+    public handleCssClass: KnockoutObservable<string>;
+
     public items: KnockoutObservableArray<ContextMenuItem> = ko.observableArray<ContextMenuItem>();
 
     constructor(data: ContextMenuConfiguration, container?: IMenuContainer) {
@@ -43,6 +48,9 @@ export class ContextMenu implements IMenuContainer {
         this.cssClass = utils.createObservable(data.cssClass, container ? container.cssClass() : defaults.cssClass);
         this.width = utils.createObservable(data.width, defaults.width);
         this.name = utils.createObservable(data.name, "");
+
+        this.hasHandle = utils.createObservable(data.hasHandle, false);
+        this.handleCssClass = utils.createObservable(data.handleCssClass, "");
 
         _.each(data.items, item => {
             this.items.push(new ContextMenuItem(item, this));
@@ -172,6 +180,7 @@ function getMaxZIndex($element: JQuery): number {
     return maxZ;
 }
 
+
 ko.bindingHandlers.contextmenu = {
     init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
         var $element = $(element),
@@ -182,41 +191,46 @@ ko.bindingHandlers.contextmenu = {
             return;
         }
 
+        var onContextMenu = function (e : JQueryEventObject) {
+            if (value instanceof ContextMenuBuilder) {
+                config = value.build(e, parentVM);
+                menu = value.contextMenus.find(x => x.name() === config.name);
+            }
+            else {
+                config = { name: value.name() };
+                menu = value;
+            }
+
+            // remove any existing menus active
+            $(".ui-context").remove();
+
+            if (menu !== undefined) {
+                menuContainer = $("<div></div>").appendTo("body");
+
+                menu.items.each((item: ContextMenuItem) => {
+                    item.disabled(!!config.disable && config.disable.indexOf(item.text()) !== -1); // disable item if necessary
+                    item.addDataItem(parentVM); // assign the data item
+                });
+
+                // calculate z-index
+                menu.zIndex = getMaxZIndex($element);
+
+                var afterRender = function (doms) {
+                    $(doms).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
+                };
+
+                ko.renderTemplate("text!koui/contextmenu/container.html", menu, { afterRender: afterRender, templateEngine: engine.defaultInstance }, menuContainer.get(0), "replaceNode");
+            }
+
+            return false;
+        }
+        if (ko.unwrap(value.hasHandle)) {
+            $("<div>").addClass("ui-context-handle").addClass(ko.unwrap(value.handleCssClass)).on("click", onContextMenu).appendTo($element);
+        }
+
         $element
             .addClass("nocontext")
-            .on("contextmenu", function (e) {
-                if (value instanceof ContextMenuBuilder) {
-                    config = value.build(e, parentVM);
-                    menu = value.contextMenus.find(x => x.name() === config.name);
-                }
-                else {
-                    config = { name: value.name() };
-                    menu = value;
-                }
-                
-                // remove any existing menus active
-                $(".ui-context").remove();
-
-                if (menu !== undefined) {
-                    menuContainer = $("<div></div>").appendTo("body");
-
-                    menu.items.each((item: ContextMenuItem) => {
-                        item.disabled(!!config.disable && config.disable.indexOf(item.text()) !== -1); // disable item if necessary
-                        item.addDataItem(parentVM); // assign the data item
-                    });
-
-                    // calculate z-index
-                    menu.zIndex = getMaxZIndex($element);
-
-                    var afterRender = function (doms) {
-                        $(doms).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
-                    };
-
-                    ko.renderTemplate("text!koui/contextmenu/container.html", menu, { afterRender: afterRender, templateEngine: engine.defaultInstance }, menuContainer.get(0), "replaceNode");
-                }
-
-                return false;
-            });
+            .on("contextmenu", onContextMenu);
 
         $("html").click(function () {
             $(".ui-context").remove();
