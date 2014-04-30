@@ -18,7 +18,7 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
             this.name = utils.createObservable(data.name, "");
 
             this.hasHandle = utils.createObservable(data.hasHandle, false);
-            this.handleCssClass = utils.createObservable(data.handleCssClass, "");
+            this.handleCssClass = utils.createObservable(data.handleCssClass);
 
             _.each(data.items, function (item) {
                 _this.items.push(new ContextMenuItem(item, _this));
@@ -85,6 +85,9 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
             this.contextMenus = ko.observableArray();
             this.cssClass = utils.createObservable(configuration.cssClass, exports.defaults.cssClass);
             this.build = configuration.build;
+
+            this.hasHandle = utils.createObservable(configuration.hasHandle, false);
+            this.handleCssClass = utils.createObservable(configuration.handleCssClass);
 
             _.each(configuration.contextMenus, function (menu) {
                 _this.contextMenus.push(new ContextMenu(menu, _this));
@@ -153,7 +156,11 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
             };
 
             if (ko.unwrap(value.hasHandle)) {
-                $("<div>").addClass("ui-context-handle").addClass(ko.unwrap(value.handleCssClass)).on("click", onContextMenu).appendTo($element);
+                var $handle = $("<div>").addClass("ui-context-handle").on("click", onContextMenu).appendTo($element);
+
+                if (value.handleCssClass) {
+                    $handle.addClass(ko.unwrap(value.handleCssClass));
+                }
             }
 
             $element.addClass("nocontext").on("contextmenu", onContextMenu);
