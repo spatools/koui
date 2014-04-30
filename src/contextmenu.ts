@@ -234,10 +234,16 @@ ko.bindingHandlers.contextmenu = {
         };
 
         if (ko.unwrap(value.hasHandle)) {
+
             var $handle = $("<div>")
-                            .addClass("ui-context-handle")
-                            .on("click", onContextMenu)
-                            .appendTo($element);
+                .addClass("ui-context-handle")
+                .on("click", onContextMenu);
+
+            if ($element.children(".node").length > 0) {
+                $handle.appendTo($element.children(".node"));
+            } else{
+                $handle.appendTo($element);
+            }
 
             if (value.handleCssClass) {
                 $handle.addClass(ko.unwrap(value.handleCssClass));
