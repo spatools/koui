@@ -50,7 +50,7 @@ export class ContextMenu implements IMenuContainer {
         this.name = utils.createObservable(data.name, "");
 
         this.hasHandle = utils.createObservable(data.hasHandle, false);
-        this.handleCssClass = utils.createObservable(data.handleCssClass, "");
+        this.handleCssClass = utils.createObservable<string>(data.handleCssClass);
 
         _.each(data.items, item => {
             this.items.push(new ContextMenuItem(item, this));
@@ -135,6 +135,8 @@ export interface ContextMenuBuilderConfiguration {
     cssClass?: any;
     build: (e: Event, parentVM: any) => ContextMenuBuilderResult;
     contextMenus: any[];
+    hasHandle?: any;
+    handleCssClass?: any;
 }
 
 export interface ContextMenuBuilderResult {
@@ -146,11 +148,17 @@ export class ContextMenuBuilder implements IMenuContainer {
     public cssClass: KnockoutObservable<string>;
     public build: (e: Event, parentVM: any) => ContextMenuBuilderResult;
 
+    public hasHandle: KnockoutObservable<boolean>;
+    public handleCssClass: KnockoutObservable<string>;
+
     public contextMenus: KnockoutObservableArray<ContextMenu> = ko.observableArray<ContextMenu>();
 
     constructor(configuration: ContextMenuBuilderConfiguration) {
         this.cssClass = utils.createObservable(configuration.cssClass, defaults.cssClass);
         this.build = configuration.build;
+
+        this.hasHandle = utils.createObservable(configuration.hasHandle, false);
+        this.handleCssClass = utils.createObservable<string>(configuration.handleCssClass);
 
         _.each(configuration.contextMenus, menu => {
             this.contextMenus.push(new ContextMenu(menu, this));
@@ -226,7 +234,14 @@ ko.bindingHandlers.contextmenu = {
         };
 
         if (ko.unwrap(value.hasHandle)) {
-            $("<div>").addClass("ui-context-handle").addClass(ko.unwrap(value.handleCssClass)).on("click", onContextMenu).appendTo($element);
+            var $handle = $("<div>")
+                            .addClass("ui-context-handle")
+                            .on("click", onContextMenu)
+                            .appendTo($element);
+
+            if (value.handleCssClass) {
+                $handle.addClass(ko.unwrap(value.handleCssClass));
+            }
         }
 
         $element
