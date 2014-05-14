@@ -19,5 +19,6 @@ declare module "jqueryui" {
 }
 
 declare module "tinymce" {
-    export = any;
+    var exports: any;
+    export = exports;
 }
