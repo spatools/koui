@@ -9,10 +9,6 @@ interface Function {
     result?: any; // Memoization Pattern
 }
 
-interface Navigator {
-    pointerEnabled: boolean;
-}
-
 interface KnockoutTemplateSourcesDomElement {
     nodes(): any;
     nodes(val: any): any;
