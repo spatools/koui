@@ -1,4 +1,5 @@
 /// <reference path="../_definitions.d.ts" />
+/// <reference path="../typings/requirejs/require.d.ts" />
 
 import ko = require("knockout");
 import _ = require("underscore");
