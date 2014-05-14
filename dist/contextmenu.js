@@ -13,9 +13,10 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
             this.items = ko.observableArray();
             this.container = container;
 
+            this.name = utils.createObservable(data.name, "");
             this.cssClass = utils.createObservable(data.cssClass, container ? container.cssClass() : exports.defaults.cssClass);
             this.width = utils.createObservable(data.width, exports.defaults.width);
-            this.name = utils.createObservable(data.name, "");
+            this.zIndex = utils.createObservable(data.zIndex, 0);
 
             this.hasHandle = utils.createObservable(data.hasHandle, false);
             this.handleCssClass = utils.createObservable(data.handleCssClass);
@@ -143,7 +144,8 @@ define(["require", "exports", "knockout", "jquery", "underscore", "koutils/utils
                         item.addDataItem(parentVM);
                     });
 
-                    menu.zIndex = getMaxZIndex($element);
+                    if (!menu.zIndex())
+                        menu.zIndex(getMaxZIndex($element));
 
                     var afterRender = function (doms) {
                         $(doms).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
