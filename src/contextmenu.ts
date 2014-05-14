@@ -23,6 +23,7 @@ export interface ContextMenuConfiguration {
     name?: any;
     cssClass?: any;
     width?: any;
+    zIndex?: any;
     items: any;
     hasHandle?: any;
     handleCssClass?: any;
@@ -35,7 +36,7 @@ export class ContextMenu implements IMenuContainer {
     public name: KnockoutObservable<string>;
     public cssClass: KnockoutObservable<string>;
     public width: KnockoutObservable<number>;
-    public zIndex: number;
+    public zIndex: KnockoutObservable<number>;
 
     public hasHandle: KnockoutObservable<boolean>;
     public handleCssClass: KnockoutObservable<string>;
@@ -45,9 +46,10 @@ export class ContextMenu implements IMenuContainer {
     constructor(data: ContextMenuConfiguration, container?: IMenuContainer) {
         this.container = container;
 
+        this.name = utils.createObservable(data.name, "");
         this.cssClass = utils.createObservable(data.cssClass, container ? container.cssClass() : defaults.cssClass);
         this.width = utils.createObservable(data.width, defaults.width);
-        this.name = utils.createObservable(data.name, "");
+        this.zIndex = utils.createObservable(data.zIndex, 0);
 
         this.hasHandle = utils.createObservable(data.hasHandle, false);
         this.handleCssClass = utils.createObservable<string>(data.handleCssClass);
@@ -188,7 +190,6 @@ function getMaxZIndex($element: JQuery): number {
     return maxZ;
 }
 
-
 ko.bindingHandlers.contextmenu = {
     init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
         var $element = $(element),
@@ -221,7 +222,8 @@ ko.bindingHandlers.contextmenu = {
                 });
 
                 // calculate z-index
-                menu.zIndex = getMaxZIndex($element);
+                if (!menu.zIndex())
+                    menu.zIndex(getMaxZIndex($element));
 
                 var afterRender = function (doms) {
                     $(doms).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
