@@ -1,4 +1,4 @@
-﻿/// <reference path=../"_definitions.d.ts" />
+﻿/// <reference path="../_definitions.d.ts" />
 
 import _ = require("underscore");
 var doc = document;
