@@ -4,7 +4,6 @@
   "description": "Knockout UI widgets to help Knockout app development",
   "main": "dist/koui.js",
   "scripts": {
-	"install": "bower install && tsd reinstall",
     "test": "grunt test"
   },
   "repository": {
