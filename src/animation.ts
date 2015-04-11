@@ -1,6 +1,5 @@
 /// <reference path="../_definitions.d.ts" />
 
-import _ = require("underscore");
 import utils = require("./utils");
 import event = require("./event");
 
@@ -123,10 +122,11 @@ export function transitionTo(element: HTMLElement, from: { [key: string]: any },
 
     ensureNames("transition");
     var transitionStyle = [],
-        transitionProp = names.transition.style;
+        transitionProp = names.transition.style,
+        val, prop;
 
     transitionStyle.push(options.duration + "ms");
-    
+
     if (options.easing)
         transitionStyle.push(options.easing);
 
@@ -134,7 +134,11 @@ export function transitionTo(element: HTMLElement, from: { [key: string]: any },
         transitionStyle.push(options.delay + "ms");
 
     if (from) {
-        _.each(from, (value, prop) => element.style[utils.prefixStyle(prop)] = value);
+        for (prop in from) {
+            if ((val = from[prop])) {
+                element.style[utils.prefixStyle(prop)] = val;
+            }
+        }
     }
 
     ensureEvent("transition", element, options, function () {
@@ -144,6 +148,10 @@ export function transitionTo(element: HTMLElement, from: { [key: string]: any },
 
     setTimeout(function () {
         element.style[transitionProp] = transitionStyle.join(" ");
-        _.each(to, (value, prop) => element.style[utils.prefixStyle(prop)] = value);
+        for (prop in to) {
+            if ((val = to[prop])) {
+                element.style[utils.prefixStyle(prop)] = val;
+            }
+        }
     }, 1);
 }

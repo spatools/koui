@@ -1,10 +1,8 @@
 /// <reference path="../_definitions.d.ts" />
-/// <amd-dependency path="koutils/underscore" />
 /// <amd-dependency path="jqueryui" />
 
 import ko = require("knockout");
 import $ = require("jquery");
-import _ = require("underscore");
 import utils = require("koutils/utils");
 import engine = require("./engine");
 
@@ -54,7 +52,7 @@ export class ContextMenu implements IMenuContainer {
         this.hasHandle = utils.createObservable(data.hasHandle, false);
         this.handleCssClass = utils.createObservable<string>(data.handleCssClass);
 
-        _.each(data.items, item => {
+        data.items.forEach(item => {
             this.items.push(new ContextMenuItem(item, this));
         });
     }
@@ -162,7 +160,7 @@ export class ContextMenuBuilder implements IMenuContainer {
         this.hasHandle = utils.createObservable(configuration.hasHandle, false);
         this.handleCssClass = utils.createObservable<string>(configuration.handleCssClass);
 
-        _.each(configuration.contextMenus, menu => {
+        configuration.contextMenus.forEach(menu => {
             this.contextMenus.push(new ContextMenu(menu, this));
         });
     }
@@ -216,7 +214,7 @@ ko.bindingHandlers.contextmenu = {
             if (menu !== undefined) {
                 menuContainer = $("<div></div>").appendTo("body");
 
-                menu.items.each((item: ContextMenuItem) => {
+                menu.items().forEach((item: ContextMenuItem) => {
                     item.disabled(!!config.disable && config.disable.indexOf(item.text()) !== -1); // disable item if necessary
                     item.addDataItem(parentVM); // assign the data item
                 });

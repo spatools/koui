@@ -3,7 +3,7 @@
 
 import ko = require("knockout");
 import $ = require("jquery");
-import _ = require("underscore");
+import UIutils = require("./utils");
 import utils = require("koutils/utils");
 
 import engine = require("./engine");
@@ -143,8 +143,9 @@ export class Tree implements TreeContainer {
     public contextMenu: ctx.ContextMenuBuilder;
 
     constructor(options: TreeOptions) {
-        _.extend(this.defaults, defaults, options.defaults || {});
-        _.extend(this.handlers, options.handlers || {});
+        ko.utils.extend(options.defaults || {}, defaults);
+        ko.utils.extend(this.defaults, options.defaults);
+        ko.utils.extend(this.handlers, options.handlers || {});
 
         this.id = utils.createObservable<string>(options.id);
         this.remember = utils.createObservable(options.remember, false);
@@ -159,38 +160,49 @@ export class Tree implements TreeContainer {
     }
 
     public findNode(id: string): TreeNode {
-        var result: TreeNode;
+        var children = this.children(),
+            i = 0, len = children.length,
+            node: TreeNode,
+            result: TreeNode;
 
-        this.children.find(node => {
+        for (; i < len; i++) {
+            node = children[i];
+
             if (node.id() === id) {
                 result = node;
-                return true;
+            }
+            else {
+                result = node.findNode(id);
             }
 
-            result = node.findNode(id);
-            return !!result;
-        });
+            if (result) {
+                break;
+            }
+        }
 
         return result;
     }
     public selectNode(id: string, root?: TreeContainer): boolean {
-        var level = root || this;
+        var level = root || this,
+            children = level.children(),
+            i = 0, len = children.length,
+            node: TreeNode, result: TreeNode;
 
-        var result = level.children.find(node => {
+        for (; i < len; i++) {
+            node = children[i];
+
             if (node.id() === id) {
                 node.selectNode();
-                return true;
+                break;
             }
 
             if (this.selectNode(id, node)) {
                 node.isOpen(true);
-                return true;
-            } else {
-                return false;
+                break;
             }
-        });
+        }
 
-        return !!result;
+        return i < len; // found
     }
 
     public addNode(node: any): void {
@@ -243,7 +255,7 @@ export class Tree implements TreeContainer {
         node && node.deleteSelf(action);
     }
     public deleteAll(): void {
-        this.children.each(node => node.deleteSelf());
+        this.children().forEach(node => node.deleteSelf());
     }
     public clear(): void {
         this.children([]);
@@ -336,7 +348,7 @@ export class TreeNode implements TreeContainer {
         this.type = utils.createObservable(options.type, defaultType);
         this.cssClass = utils.createObservable(options.cssClass, this.type());
         this.iconCssClass = utils.createObservable(options.iconCssClass, "");
-        this.index = utils.createObservable(options.index, _.isUndefined(index) ? parent.children().length : index);
+        this.index = utils.createObservable(options.index, utils.is(index, "undefined") ? parent.children().length : index);
         this.remember = parent.remember;
 
         this.isOpen = utils.createObservable(options.isOpen, false);
@@ -386,10 +398,8 @@ export class TreeNode implements TreeContainer {
         this.connectToSortable = ko.computed(() => typeValueOrDefault<string>("connectToSortable", this.type(), this.viewModel));
         this.isDraggable = ko.computed(() => {
             var name = this.name(),
-                childRenaming = false,
+                childRenaming = this.children().some(child => child.isRenaming()),
                 typeDefault = <boolean>typeValueOrDefault("isDraggable", this.type(), this.viewModel);
-
-            this.children.find(child => (childRenaming = child.isRenaming()));
 
             return !this.isRenaming() && !childRenaming && typeDefault;
         });
@@ -405,11 +415,11 @@ export class TreeNode implements TreeContainer {
 
         this.loadState();
 
-        _.bindAll(this, "toggle", "clicked", "doubleClick");
+        UIutils.bindAll(this, "toggle", "clicked", "doubleClick");
     }
 
     public hasChildren(): boolean {
-        return this.children.size() > 0;
+        return this.children().length > 0;
     }
     public hasContext(): boolean {
         return !!this.contextMenu;
@@ -429,24 +439,32 @@ export class TreeNode implements TreeContainer {
         }
     }
     public setViewModel(viewModel: any): void {
-        this.children.each(child => child.setViewModel(viewModel));
+        this.children().forEach(child => child.setViewModel(viewModel));
 
         this.viewModel = viewModel;
         this.contextMenu = viewModel.contextMenu;
     }
 
     public findNode(id: string): TreeNode {
-        var result: TreeNode;
+        var children = this.children(),
+            i = 0, len = children.length,
+            node: TreeNode,
+            result: TreeNode;
 
-        this.children.find(node => {
+        for (; i < len; i++) {
+            node = children[i];
+
             if (node.id() === id) {
                 result = node;
-                return true;
+            }
+            else {
+                result = node.findNode(id);
             }
 
-            result = node.findNode(id);
-            return !!result;
-        });
+            if (result) {
+                break;
+            }
+        }
 
         return result;
     }
@@ -531,14 +549,14 @@ export class TreeNode implements TreeContainer {
         this.viewModel.handlers.deleteNode(this, action, () => {
             var parent = this.parent();
 
-            this.children.each(child => child.deleteSelf(action + " child"));
+            this.children().forEach(child => child.deleteSelf(action + " child"));
 
             if (parent !== undefined) {
                 parent.children.remove(this);
 
                 if (!action || action.indexOf("child") === -1) {
                     var tIndex = this.index();
-                    parent.children.each(child => {
+                    parent.children().forEach(child => {
                         var index = child.index();
                         (index > tIndex) && child.index(index - 1);
                     });
@@ -552,13 +570,13 @@ export class TreeNode implements TreeContainer {
     public move(node: TreeNode, parent?: TreeContainer, index?: number): void {
         var newParent = parent || this,
             oldParent = node.parent(),
-            newIndex = typeof index === "undefined" ? newParent.children.size() : index,
+            newIndex = typeof index === "undefined" ? newParent.children().length : index,
             oldIndex = node.index();
 
         this.viewModel.handlers.moveNode(node, newParent, newIndex, () => {
             oldParent.children.remove(node);
 
-            oldParent.children.each(child => {
+            oldParent.children().forEach(child => {
                 var index = child.index();
                 (index > oldIndex) && child.index(index - 1);
             });
@@ -566,7 +584,7 @@ export class TreeNode implements TreeContainer {
             node.index(newIndex);
             node.parent(newParent);
 
-            oldParent.children.each(child => {
+            oldParent.children().forEach(child => {
                 var index = child.index();
                 (index >= newIndex) && child.index(index + 1);
             });

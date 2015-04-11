@@ -3,8 +3,8 @@
 
 import ko = require("knockout");
 import $ = require("jquery");
-import _ = require("underscore");
 
+import UIutils = require("./utils");
 import utils = require("koutils/utils");
 import engine = require("./engine");
 
@@ -46,7 +46,7 @@ export class Slider {
     constructor(value: KnockoutSubscribable<number>);
     constructor(options: SliderOptions);
     constructor(options: any) {
-        if (!_.isObject(options) || ko.isSubscribable(options))
+        if (!utils.isObject(options) || ko.isSubscribable(options))
             options = { value: options };
 
         this.value = utils.createObservable(options.value, 0);
@@ -91,7 +91,7 @@ export class Slider {
             deferEvaluation: true
         });
 
-        _.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
+        UIutils.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
     }
 
     public init(element: Element): void {
@@ -105,7 +105,7 @@ export class Slider {
 
     public onMouseDown(e: MouseEvent): void {
         this.isMouseDown = true;
-            
+
         var pos = this.getRelativePosition(e.pageX, e.pageY);
         this.position(pos.x);
     }

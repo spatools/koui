@@ -1,6 +1,6 @@
 ﻿/// <reference path="../_definitions.d.ts" />
 
-import _ = require("underscore");
+import ko = require("knockout");
 var doc = document;
 
 /** Trigger event of given type on the target element */
@@ -15,7 +15,7 @@ export function trigger(element: HTMLElement, eventType: string, eventArgs: any)
     }
 
     evt.eventName = eventType;
-    _.extend(evt, eventArgs);
+    ko.utils.extend(evt, eventArgs);
 
     if (doc.createEvent) {
         element.dispatchEvent(evt);

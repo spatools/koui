@@ -3,7 +3,7 @@
 
 import ko = require("knockout");
 import $ = require("jquery");
-import _ = require("underscore");
+import utils = require("koutils/utils");
 
 import tinymce = require("tinymce");
 
@@ -23,7 +23,7 @@ ko.bindingHandlers.tinymce = {
             id = $element.attr("id"),
             oldSetup, editor;
 
-        if (_.isObject(options)) {
+        if (utils.isObject(options)) {
             value = options.value;
             delete options.value;
         }
@@ -36,7 +36,8 @@ ko.bindingHandlers.tinymce = {
             $element.attr("id", id);
         }
 
-        options = _.extend(defaults, options);
+        ko.utils.extend(options, defaults);
+
         oldSetup = options.setup;
         options.setup = function (editor) {
             oldSetup && oldSetup.call(undefined);
@@ -71,7 +72,7 @@ ko.bindingHandlers.tinymce = {
             editor = tinymce.get($element.attr("id")),
             content = editor.getContent();
 
-        if (_.isObject(val)) {
+        if (utils.isObject(val)) {
             val = ko.unwrap(val.value);
         }
 

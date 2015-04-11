@@ -2,9 +2,9 @@
 /// <reference path="../typings/requirejs/require.d.ts" />
 
 import ko = require("knockout");
-import _ = require("underscore");
 import $ = require("jquery");
-import utils = require("./utils");
+import utils = require("koutils/utils");
+import UIutils = require("./utils");
 
 var sourceRegex = /^text!(.+)/,
     sources: { [key: string]: RequireSource } = {};
@@ -34,7 +34,7 @@ export class RequireSource {
     constructor(
         public source: string,
         public options: RequireSourceOptions = {}) {
-            if (!_.isString(source)) {
+            if (!utils.is(source, "string")) {
                 throw new Error("Require Template Source need string template source");
             }
 
@@ -43,7 +43,7 @@ export class RequireSource {
             }
 
             this.name = source.match(sourceRegex)[1];
-            
+
             var tmpl: any = ko.observable(this.options.loadingTemplate || RequireEngine.defaults.loading);
             tmpl.data = {};
 
@@ -94,7 +94,7 @@ export class RequireSource {
         if (arguments.length === 0) {
             var markup = this.text(); // to register dependency
             if (!this.template.data.__NODES__) {
-                this.template.data.__NODES__ = utils.unsafe(() => parseMarkup(markup));
+                this.template.data.__NODES__ = UIutils.unsafe(() => parseMarkup(markup));
             }
 
             return this.template.data.__NODES__;

@@ -42,6 +42,18 @@ export function getWindowSize(): Size {
     };
 }
 
+//#region Utility Method
+
+export function bindAll(owner: any, ...methods: string[]) {
+    methods.forEach(method => {
+        if (owner[method]) {
+            owner[method] = owner[method].bind(owner);
+        }
+    });
+}
+
+//#endregion
+
 //#region Prefix Methods
 
 var vendorPrefix = null;

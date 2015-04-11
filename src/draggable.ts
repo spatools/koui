@@ -1,9 +1,9 @@
 /// <reference path="../_definitions.d.ts" />
 
 import ko = require("knockout");
-import _ = require("underscore");
 import $ = require("jquery");
 import utils = require("koutils/utils");
+import UIutils = require("./utils");
 
 var doc = document,
     $doc = $(doc),
@@ -73,7 +73,7 @@ export class Draggable {
     public isEnabled: KnockoutObservable<boolean>;
     public left: KnockoutObservable<number>;
     public top: KnockoutObservable<number>;
-    
+
     public dragStart: (vm: any) => any;
     public dragEnd: (vm: any) => any;
 
@@ -90,7 +90,7 @@ export class Draggable {
         this.isEnabled.subscribe(this.isEnabledChanged, this);
         this.isEnabled() && this.enable();
 
-        _.bindAll(this, "onMouseDown", "onMouseMove", "onMouseUp");
+        UIutils.bindAll(this, "onMouseDown", "onMouseMove", "onMouseUp");
     }
 
     public enable(): void {
@@ -131,7 +131,7 @@ export class Draggable {
         $doc.on("mouseup touchend pointerup", this.onMouseUp);
         this.container.on("mousemove touchmove pointermove", this.onMouseMove);
 
-        if (this.dragStart && _.isFunction(this.dragStart)) {
+        if (this.dragStart && utils.is(this.dragStart, "function")) {
             this.dragStart.call(this.viewModel);
         }
 
@@ -144,7 +144,7 @@ export class Draggable {
         var $data = this.$element.data("ko-draggable");
         $data.isMouseDown = false;
 
-        if (this.dragEnd && _.isFunction(this.dragEnd)) {
+        if (this.dragEnd && utils.is(this.dragEnd, "function")) {
             this.dragEnd.call(this.viewModel);
         }
 
@@ -185,7 +185,7 @@ ko.bindingHandlers.draggable = {
         var data = ko.unwrap(valueAccessor()),
             draggable = element._draggable || data;
 
-        if (!_.isUndefined(data.isEnabled) && !ko.isSubscribable(data.isEnabled)) {
+        if (!utils.is(data.isEnabled, "undefined") && !ko.isSubscribable(data.isEnabled)) {
             var isEnabled = $(element).data("dragIsEnabled");
             if (data.isEnabled !== isEnabled) {
                 data.isEnabled ? draggable.enable() : draggable.disable();

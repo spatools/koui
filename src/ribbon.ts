@@ -1,7 +1,6 @@
 /// <reference path="../_definitions.d.ts" />
 
 import ko = require("knockout");
-import _ = require("underscore");
 import $ = require("jquery");
 import utils = require("koutils/utils");
 import _slider = require("./slider");
@@ -10,15 +9,12 @@ var Slider = _slider.Slider;
 //#region Private Methods 
 
 function mapToRibbonItem(array: any) {
-    if (_.isArray(array)) {
-        return _.map(array, createRibbonItem);
-    }
-    else if (ko.isWriteableObservable(array) && array.map) {
+    if (utils.is(array, "array")) {
         return array.map(createRibbonItem);
     }
-    else if (ko.isComputed(array)) {
+    else if (ko.isObservable(array)) {
         return ko.computed(function () {
-            return _.map(array(), createRibbonItem);
+            return array().map(createRibbonItem);
         });
     }
 }
@@ -124,13 +120,21 @@ export class Ribbon {
             return;
         }
 
-        if (_.isNumber(page)) {
+        if (utils.is(page, "number")) {
             var index = page;
             page = this.pages()[index];
         }
-        else if (_.isString(page)) {
-            var title = page;
-            page = this.pages.find(p => ko.unwrap(p.title) === title);
+        else if (utils.is(page, "string")) {
+            var title = page,
+                pages = this.pages(),
+                i = 0, len = pages.length;
+
+            for (; i < len; i++) {
+                if (ko.unwrap(pages[i].title) === title) {
+                    page = pages[i];
+                    break;
+                }
+            }
         }
 
         if (page && page instanceof RibbonPage) {
@@ -156,17 +160,23 @@ export class Ribbon {
 
     public removeSpecialPages(): void {
         var isSelected = false,
-            selected = this.selectedPage();
+            selected = this.selectedPage(),
 
-        var toremove = this.pages.filterMap((p, i) => {
-            if (p === selected)
+            pages = this.pages(),
+            i = 0, page = pages[i];
+
+        while (!!page) {
+            if (page === selected)
                 isSelected = true;
 
-            if (p.special() === true)
-                return i;
-        });
-
-        _.each(toremove, i => this.pages.splice(i, 1));
+            if (page.special() === true) {
+                pages.splice(i, 1);
+                page = pages[i];
+            }
+            else {
+                page = pages[++i];
+            }
+        }
 
         if (isSelected)
             this.selectPage(0);
@@ -329,7 +339,7 @@ export class RibbonListItem extends RibbonItem {
     public title: KnockoutObservable<string>;
     public icon: KnockoutObservable<string>;
     public click: () => any;
-    
+
     constructor(options: RibbonListItemOptions) {
         this.title = utils.createObservable(options.title, "List Item");
         this.icon = utils.createObservable(options.icon, "icon-list-base");
@@ -522,7 +532,7 @@ ko.bindingHandlers.ribbon = {
 
         var pages = $("<ul>").addClass("ribbon-pages").attr("data-bind", "foreach: pages").appendTo($ribbon);
         $("<li>").attr("data-bind", "ribbonPage: $data, css: { special: special, selected: $parent.selectedPage() == $data }").appendTo(pages);
-        ribbon.selectedPage(_.first(ko.unwrap(ribbon.pages)));
+        ribbon.selectedPage(ko.unwrap(ribbon.pages)[0]);
 
         new ko.templateSources.anonymousTemplate(element).nodes(container.get(0));
         return { controlsDescendantBindings: true };
@@ -778,7 +788,7 @@ ko.bindingHandlers.ribbonInput = {
 
         if (_class) {
             var classes = _class.split(" "), css: any = {};
-            _.each(classes, _class => css[_class] = true);
+            classes.forEach(_class => css[_class] = true);
             ko.bindingHandlers.css.update(element, utils.createAccessor(css), allBindingsAccessor, viewModel, bindingContext);
         }
 
