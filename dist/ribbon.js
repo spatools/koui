@@ -120,7 +120,8 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
                 if (page === selected)
                     isSelected = true;
                 if (page.special() === true) {
-                    pages.splice(i, 1);
+                    this.pages.splice(i, 1);
+                    pages = this.pages();
                     page = pages[i];
                 }
                 else {
