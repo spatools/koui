@@ -9,13 +9,11 @@ var Slider = _slider.Slider;
 //#region Private Methods 
 
 function mapToRibbonItem(array: any) {
-    if (utils.is(array, "array")) {
-        return array.map(createRibbonItem);
+    if (ko.isObservable(array) && Array.isArray(array())) {
+        return ko.pureComputed(() => array().map(createRibbonItem));
     }
-    else if (ko.isObservable(array)) {
-        return ko.computed(function () {
-            return array().map(createRibbonItem);
-        });
+    else if (Array.isArray(array)) {
+        return array.map(createRibbonItem);
     }
 }
 
