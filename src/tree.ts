@@ -359,8 +359,8 @@ export class TreeNode implements TreeContainer {
         this.contents = options.contents; // a placeholder for additional custom data
         this.children = utils.createObservableArray(options.children, this.createChild, this);
 
-        this.canAddChildren = ko.computed(() => typeValueOrDefault<boolean>("canAddChildren", this.type(), this.viewModel));
-        this.showAddBefore = ko.computed(() => {
+        this.canAddChildren = ko.pureComputed(() => typeValueOrDefault<boolean>("canAddChildren", this.type(), this.viewModel));
+        this.showAddBefore = ko.pureComputed(() => {
             var parent = this.parent(),
                 dragHolder = viewModel.dragHolder();
 
@@ -377,7 +377,7 @@ export class TreeNode implements TreeContainer {
 
             return false;
         });
-        this.showAddAfter = ko.computed(() => {
+        this.showAddAfter = ko.pureComputed(() => {
             var parent = this.parent(),
                 dragHolder = viewModel.dragHolder();
 
@@ -394,9 +394,9 @@ export class TreeNode implements TreeContainer {
             return false;
         });
 
-        this.isDropTarget = ko.computed(() => typeValueOrDefault<boolean>("isDropTarget", this.type(), this.viewModel));
-        this.connectToSortable = ko.computed(() => typeValueOrDefault<string>("connectToSortable", this.type(), this.viewModel));
-        this.isDraggable = ko.computed(() => {
+        this.isDropTarget = ko.pureComputed(() => typeValueOrDefault<boolean>("isDropTarget", this.type(), this.viewModel));
+        this.connectToSortable = ko.pureComputed(() => typeValueOrDefault<string>("connectToSortable", this.type(), this.viewModel));
+        this.isDraggable = ko.pureComputed(() => {
             var name = this.name(),
                 childRenaming = this.children().some(child => child.isRenaming()),
                 typeDefault = <boolean>typeValueOrDefault("isDraggable", this.type(), this.viewModel);
@@ -404,7 +404,7 @@ export class TreeNode implements TreeContainer {
             return !this.isRenaming() && !childRenaming && typeDefault;
         });
 
-        this.level = ko.computed(() => {
+        this.level = ko.pureComputed(() => {
             try {
                 var plevel = this.parent().level();
                 return plevel + 1;

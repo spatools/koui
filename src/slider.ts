@@ -54,7 +54,7 @@ export class Slider {
         this.max = utils.createObservable(options.max, 1);
         this.step = utils.createObservable(options.step, 0.01);
 
-        this.coef = ko.computed({
+        this.coef = ko.pureComputed({
             read: function (): number {
                 var max = this.max(),
                     min = this.min(),
@@ -77,7 +77,7 @@ export class Slider {
             owner: this
         });
 
-        this.position = ko.computed({
+        this.position = ko.pureComputed({
             read: function (): number {
                 var coef = this.coef();
                 this.updateWidths();
@@ -87,8 +87,7 @@ export class Slider {
                 this.updateWidths();
                 this.coef(pos / this.elementWidth());
             },
-            owner: this,
-            deferEvaluation: true
+            owner: this
         });
 
         UIutils.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
