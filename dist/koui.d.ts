@@ -86,7 +86,9 @@ export interface TransitionOptions {
     delay: number;
     easing: string;
 }
+/** Launch given animation on the given element */
 export function launch(element: HTMLElement, animationName: string, options: AnimationOptions, completed?: () => any): void;
+/** Launch given animation on the given element */
 export function transitionTo(element: HTMLElement, from: {
     [key: string]: any;
 }, to: {
@@ -113,14 +115,14 @@ export interface ContextMenuConfiguration {
 }
 export class ContextMenu implements IMenuContainer {
     private container;
-    public engine: any;
-    public name: KnockoutObservable<string>;
-    public cssClass: KnockoutObservable<string>;
-    public width: KnockoutObservable<number>;
-    public zIndex: KnockoutObservable<number>;
-    public hasHandle: KnockoutObservable<boolean>;
-    public handleCssClass: KnockoutObservable<string>;
-    public items: KnockoutObservableArray<ContextMenuItem>;
+    engine: any;
+    name: KnockoutObservable<string>;
+    cssClass: KnockoutObservable<string>;
+    width: KnockoutObservable<number>;
+    zIndex: KnockoutObservable<number>;
+    hasHandle: KnockoutObservable<boolean>;
+    handleCssClass: KnockoutObservable<string>;
+    items: KnockoutObservableArray<ContextMenuItem>;
     constructor(data: ContextMenuConfiguration, container?: IMenuContainer);
 }
 export interface ContextMenuItemConfiguration {
@@ -134,18 +136,18 @@ export class ContextMenuItem {
     private container;
     private subMenu;
     private dataItem;
-    public text: KnockoutObservable<string>;
-    public iconCssClass: KnockoutObservable<string>;
-    public width: KnockoutObservable<number>;
-    public separator: KnockoutObservable<boolean>;
-    public disabled: KnockoutObservable<boolean>;
-    public run: (dataItem?: any) => any;
+    text: KnockoutObservable<string>;
+    iconCssClass: KnockoutObservable<string>;
+    width: KnockoutObservable<number>;
+    separator: KnockoutObservable<boolean>;
+    disabled: KnockoutObservable<boolean>;
+    run: (dataItem?: any) => any;
     constructor(data: ContextMenuItemConfiguration, container: ContextMenu);
-    public hasChildren(): boolean;
-    public addDataItem(dataItem: any): void;
-    public itemWidth(): string;
-    public labelWidth(): string;
-    public onClick(e: Event): boolean;
+    hasChildren(): boolean;
+    addDataItem(dataItem: any): void;
+    itemWidth(): string;
+    labelWidth(): string;
+    onClick(e: Event): boolean;
 }
 export interface ContextMenuBuilderConfiguration {
     cssClass?: any;
@@ -159,11 +161,11 @@ export interface ContextMenuBuilderResult {
     disable?: string[];
 }
 export class ContextMenuBuilder implements IMenuContainer {
-    public cssClass: KnockoutObservable<string>;
-    public build: (e: Event, parentVM: any) => ContextMenuBuilderResult;
-    public hasHandle: KnockoutObservable<boolean>;
-    public handleCssClass: KnockoutObservable<string>;
-    public contextMenus: KnockoutObservableArray<ContextMenu>;
+    cssClass: KnockoutObservable<string>;
+    build: (e: Event, parentVM: any) => ContextMenuBuilderResult;
+    hasHandle: KnockoutObservable<boolean>;
+    handleCssClass: KnockoutObservable<string>;
+    contextMenus: KnockoutObservableArray<ContextMenu>;
     constructor(configuration: ContextMenuBuilderConfiguration);
 }
 }
@@ -179,17 +181,17 @@ export interface DraggableOptions {
     dragEnd?: (vm: any) => any;
 }
 export class Draggable {
-    public viewModel: any;
+    viewModel: any;
     private $element;
     private container;
-    public isEnabled: KnockoutObservable<boolean>;
-    public left: KnockoutObservable<number>;
-    public top: KnockoutObservable<number>;
-    public dragStart: (vm: any) => any;
-    public dragEnd: (vm: any) => any;
+    isEnabled: KnockoutObservable<boolean>;
+    left: KnockoutObservable<number>;
+    top: KnockoutObservable<number>;
+    dragStart: (vm: any) => any;
+    dragEnd: (vm: any) => any;
     constructor(options: DraggableOptions, element: HTMLElement, viewModel: any);
-    public enable(): void;
-    public disable(): void;
+    enable(): void;
+    disable(): void;
     private isEnabledChanged(enabled);
     private onMouseDown(e);
     private onMouseUp(e);
@@ -206,21 +208,21 @@ export interface RequireSourceOptions {
     afterRender?: () => any;
 }
 export class RequireSource {
-    public source: string;
-    public options: RequireSourceOptions;
-    public name: string;
-    public template: RequireTemplateObservable;
-    public isLoading: boolean;
-    public isLoaded: boolean;
+    source: string;
+    options: RequireSourceOptions;
+    name: string;
+    template: RequireTemplateObservable;
+    isLoading: boolean;
+    isLoaded: boolean;
     constructor(source: string, options?: RequireSourceOptions);
     static isRequireTemplateSource(value: string): boolean;
-    public text(): string;
-    public text(value: string): void;
-    public data(key: string): any;
-    public data(key: string, value: any): void;
-    public nodes(): Element;
-    public nodes(element: Element): void;
-    public loadTemplate(): void;
+    text(): string;
+    text(value: string): void;
+    data(key: string): any;
+    data(key: string, value: any): void;
+    nodes(): Element;
+    nodes(element: Element): void;
+    loadTemplate(): void;
 }
 export var RequireEngine: any;
 export var defaultInstance: any;
@@ -228,10 +230,15 @@ export function setTemplateEngine(innerEngine?: KnockoutTemplateEngine): void;
 }
 
 declare module "koutils/event" {
+/** Trigger event of given type on the target element */
 export function trigger(element: HTMLElement, eventType: string, eventArgs: any): void;
+/** Attach the given handler to given event types */
 export function attach(element: HTMLElement, eventTypes: string, handler: () => any): void;
+/** Detach the given handler from given event types */
 export function detach(element: HTMLElement, eventTypes: string, handler: () => any): void;
+/** Attach the given handler to given event types and detach it on the first call */
 export function once(element: HTMLElement, eventTypes: string, handler: () => any): void;
+/** Check existence of given event name */
 export function check(eventName: string): boolean;
 export function stopPropagation(event: any): void;
 export function preventDefault(event: any): boolean;
@@ -249,20 +256,20 @@ export interface RibbonOptions {
     triggerResize?: any;
 }
 export class Ribbon {
-    public pages: KnockoutObservableArray<RibbonPage>;
-    public selectedPage: KnockoutObservable<RibbonPage>;
-    public isCollapsed: KnockoutObservable<boolean>;
-    public isLocked: KnockoutObservable<boolean>;
-    public triggerResize: KnockoutObservable<boolean>;
-    public backButtonIcon: KnockoutObservable<string>;
-    public backButtonClick: () => any;
+    pages: KnockoutObservableArray<RibbonPage>;
+    selectedPage: KnockoutObservable<RibbonPage>;
+    isCollapsed: KnockoutObservable<boolean>;
+    isLocked: KnockoutObservable<boolean>;
+    triggerResize: KnockoutObservable<boolean>;
+    backButtonIcon: KnockoutObservable<string>;
+    backButtonClick: () => any;
     constructor(options: RibbonOptions);
-    public selectPage(page: number): void;
-    public selectPage(page: string): void;
-    public selectPage(page: RibbonPage): void;
-    public addPage(page: any, special?: boolean): void;
-    public expand(): void;
-    public removeSpecialPages(): void;
+    selectPage(page: number): void;
+    selectPage(page: string): void;
+    selectPage(page: RibbonPage): void;
+    addPage(page: any, special?: boolean): void;
+    expand(): void;
+    removeSpecialPages(): void;
     private createPage(page);
 }
 export interface RibbonPageOptions {
@@ -272,12 +279,12 @@ export interface RibbonPageOptions {
     pop?: any;
 }
 export class RibbonPage {
-    public title: KnockoutObservable<string>;
-    public special: KnockoutObservable<boolean>;
-    public groups: KnockoutObservableArray<RibbonGroup>;
-    public pop: KnockoutObservable<boolean>;
+    title: KnockoutObservable<string>;
+    special: KnockoutObservable<boolean>;
+    groups: KnockoutObservableArray<RibbonGroup>;
+    pop: KnockoutObservable<boolean>;
     constructor(options: RibbonPageOptions);
-    public show(): void;
+    show(): void;
     private createGroup(group);
 }
 export interface RibbonGroupOptions {
@@ -290,11 +297,11 @@ export interface RibbonGroupOptions {
 export class RibbonItem {
 }
 export class RibbonGroup {
-    public title: KnockoutObservable<string>;
-    public priority: KnockoutObservable<number>;
-    public isCollapsed: KnockoutObservable<boolean>;
-    public icon: KnockoutObservable<string>;
-    public content: KnockoutObservableArray<RibbonItem>;
+    title: KnockoutObservable<string>;
+    priority: KnockoutObservable<number>;
+    isCollapsed: KnockoutObservable<boolean>;
+    icon: KnockoutObservable<string>;
+    content: KnockoutObservableArray<RibbonItem>;
     constructor(options: RibbonGroupOptions);
 }
 export interface RibbonFlyoutOptions {
@@ -304,10 +311,10 @@ export interface RibbonFlyoutOptions {
     selected?: any;
 }
 export class RibbonFlyout extends RibbonItem {
-    public title: KnockoutObservable<string>;
-    public icon: KnockoutObservable<string>;
-    public selected: KnockoutObservable<boolean>;
-    public content: KnockoutObservableArray<RibbonItem>;
+    title: KnockoutObservable<string>;
+    icon: KnockoutObservable<string>;
+    selected: KnockoutObservable<boolean>;
+    content: KnockoutObservableArray<RibbonItem>;
     constructor(options: RibbonFlyoutOptions);
 }
 export interface RibbonButtonOptions {
@@ -318,15 +325,15 @@ export interface RibbonButtonOptions {
     click?: () => any;
 }
 export class RibbonButton extends RibbonItem {
-    public title: KnockoutObservable<string>;
-    public icon: KnockoutObservable<string>;
-    public selected: KnockoutObservable<boolean>;
-    public class: KnockoutObservable<string>;
-    public click: () => any;
+    title: KnockoutObservable<string>;
+    icon: KnockoutObservable<string>;
+    selected: KnockoutObservable<boolean>;
+    class: KnockoutObservable<string>;
+    click: () => any;
     constructor(options: RibbonButtonOptions);
 }
 export class RibbonList extends RibbonItem {
-    public items: KnockoutObservableArray<RibbonItem>;
+    items: KnockoutObservableArray<RibbonItem>;
     constructor(items: any);
 }
 export interface RibbonListItemOptions {
@@ -335,9 +342,9 @@ export interface RibbonListItemOptions {
     click?: () => any;
 }
 export class RibbonListItem extends RibbonItem {
-    public title: KnockoutObservable<string>;
-    public icon: KnockoutObservable<string>;
-    public click: () => any;
+    title: KnockoutObservable<string>;
+    icon: KnockoutObservable<string>;
+    click: () => any;
     constructor(options: RibbonListItemOptions);
 }
 export interface RibbonFormOptions {
@@ -345,8 +352,8 @@ export interface RibbonFormOptions {
     inline?: any;
 }
 export class RibbonForm extends RibbonItem {
-    public items: KnockoutObservableArray<RibbonItem>;
-    public inline: KnockoutObservable<boolean>;
+    items: KnockoutObservableArray<RibbonItem>;
+    inline: KnockoutObservable<boolean>;
     constructor(items: any, inline?: any);
 }
 export interface RibbonInputOptions {
@@ -363,17 +370,17 @@ export interface RibbonInputOptions {
     on?: any;
 }
 export class RibbonInput extends RibbonItem {
-    public label: KnockoutObservable<string>;
-    public icon: KnockoutObservable<string>;
-    public type: KnockoutObservable<string>;
-    public value: KnockoutObservable<any>;
-    public class: KnockoutObservable<any>;
-    public on: KnockoutObservable<any>;
-    public options: any;
-    public optionsText: any;
-    public optionsValue: any;
-    public valueUpdate: any;
-    public attr: any;
+    label: KnockoutObservable<string>;
+    icon: KnockoutObservable<string>;
+    type: KnockoutObservable<string>;
+    value: KnockoutObservable<any>;
+    class: KnockoutObservable<any>;
+    on: KnockoutObservable<any>;
+    options: any;
+    optionsText: any;
+    optionsValue: any;
+    valueUpdate: any;
+    attr: any;
     constructor(options: RibbonInputOptions);
 }
 export interface RibbonCheckboxOptions {
@@ -381,8 +388,8 @@ export interface RibbonCheckboxOptions {
     checked?: any;
 }
 export class RibbonCheckbox extends RibbonItem {
-    public label: KnockoutObservable<string>;
-    public checked: KnockoutObservable<boolean>;
+    label: KnockoutObservable<string>;
+    checked: KnockoutObservable<boolean>;
     constructor(options: RibbonCheckboxOptions);
 }
 export interface RibbonSliderOptions {
@@ -394,12 +401,12 @@ export interface RibbonSliderOptions {
     value?: any;
 }
 export class RibbonSlider extends RibbonItem {
-    public label: KnockoutObservable<string>;
-    public icon: KnockoutObservable<string>;
-    public min: KnockoutObservable<number>;
-    public max: KnockoutObservable<number>;
-    public step: KnockoutObservable<number>;
-    public value: KnockoutObservable<any>;
+    label: KnockoutObservable<string>;
+    icon: KnockoutObservable<string>;
+    min: KnockoutObservable<number>;
+    max: KnockoutObservable<number>;
+    step: KnockoutObservable<number>;
+    value: KnockoutObservable<any>;
     constructor(options: RibbonSliderOptions);
 }
 }
@@ -418,20 +425,20 @@ export class Slider {
     private isMouseDown;
     private elementWidth;
     private handleWidth;
-    public value: KnockoutObservable<number>;
-    public min: KnockoutObservable<number>;
-    public max: KnockoutObservable<number>;
-    public step: KnockoutObservable<number>;
-    public coef: KnockoutComputed<number>;
-    public position: KnockoutComputed<number>;
+    value: KnockoutObservable<number>;
+    min: KnockoutObservable<number>;
+    max: KnockoutObservable<number>;
+    step: KnockoutObservable<number>;
+    coef: KnockoutComputed<number>;
+    position: KnockoutComputed<number>;
     constructor(value: number);
     constructor(value: KnockoutSubscribable<number>);
     constructor(options: SliderOptions);
-    public init(element: Element): void;
-    public afterRender(): void;
-    public onMouseDown(e: MouseEvent): void;
-    public onMouseMove(e: MouseEvent): void;
-    public onMouseUp(e: MouseEvent): void;
+    init(element: Element): void;
+    afterRender(): void;
+    onMouseDown(e: MouseEvent): void;
+    onMouseMove(e: MouseEvent): void;
+    onMouseUp(e: MouseEvent): void;
     private updateWidths();
     private getRelativePosition(x, y);
 }
@@ -441,7 +448,7 @@ declare module "koutils/tinymce" {
 }
 
 declare module "koutils/tree" {
-import ctx = require("./contextmenu");
+import ctx = require("koutils/contextmenu");
 export interface TreeDefaults {
     cssClass?: string;
     isDraggable?: boolean;
@@ -509,26 +516,26 @@ export interface TreeContainer {
     isDropTarget?: KnockoutComputed<boolean>;
 }
 export class Tree implements TreeContainer {
-    public engine: any;
-    public defaults: TreeDefaults;
-    public handlers: TreeHandlers;
-    public id: KnockoutObservable<string>;
-    public remember: KnockoutObservable<boolean>;
-    public dragHolder: KnockoutObservable<any>;
-    public isDragging: KnockoutObservable<boolean>;
-    public children: KnockoutObservableArray<TreeNode>;
-    public selectedNode: KnockoutObservable<TreeNode>;
-    public tree: HTMLElement;
-    public contextMenu: ctx.ContextMenuBuilder;
+    engine: any;
+    defaults: TreeDefaults;
+    handlers: TreeHandlers;
+    id: KnockoutObservable<string>;
+    remember: KnockoutObservable<boolean>;
+    dragHolder: KnockoutObservable<any>;
+    isDragging: KnockoutObservable<boolean>;
+    children: KnockoutObservableArray<TreeNode>;
+    selectedNode: KnockoutObservable<TreeNode>;
+    tree: HTMLElement;
+    contextMenu: ctx.ContextMenuBuilder;
     constructor(options: TreeOptions);
-    public findNode(id: string): TreeNode;
-    public selectNode(id: string, root?: TreeContainer): boolean;
-    public addNode(node: any): void;
-    public renameNode(node?: TreeNode): void;
-    public deleteNode(action?: string, node?: TreeNode): void;
-    public deleteAll(): void;
-    public clear(): void;
-    public recalculateSizes(): void;
+    findNode(id: string): TreeNode;
+    selectNode(id: string, root?: TreeContainer): boolean;
+    addNode(node: any): void;
+    renameNode(node?: TreeNode): void;
+    deleteNode(action?: string, node?: TreeNode): void;
+    deleteAll(): void;
+    clear(): void;
+    recalculateSizes(): void;
     private createNode(node, index?);
 }
 export interface TreeNodeOptions {
@@ -545,52 +552,52 @@ export interface TreeNodeOptions {
     children?: any;
 }
 export class TreeNode implements TreeContainer {
-    public viewModel: Tree;
-    public parent: KnockoutObservable<TreeContainer>;
-    public contextMenu: ctx.ContextMenuBuilder;
-    public id: KnockoutObservable<string>;
-    public name: KnockoutObservable<string>;
-    public type: KnockoutObservable<string>;
-    public cssClass: KnockoutObservable<string>;
-    public iconCssClass: KnockoutObservable<string>;
-    public index: KnockoutObservable<number>;
-    public remember: KnockoutObservable<boolean>;
-    public isOpen: KnockoutObservable<boolean>;
-    public isSelected: KnockoutObservable<boolean>;
-    public isRenaming: KnockoutObservable<boolean>;
-    public isDragging: KnockoutObservable<boolean>;
-    public contents: any;
-    public children: KnockoutObservableArray<TreeNode>;
-    public canAddChildren: KnockoutComputed<boolean>;
-    public showAddBefore: KnockoutComputed<boolean>;
-    public showAddAfter: KnockoutComputed<boolean>;
-    public isDropTarget: KnockoutComputed<boolean>;
-    public isDraggable: KnockoutComputed<boolean>;
-    public connectToSortable: KnockoutComputed<string>;
-    public level: KnockoutComputed<number>;
+    viewModel: Tree;
+    parent: KnockoutObservable<TreeContainer>;
+    contextMenu: ctx.ContextMenuBuilder;
+    id: KnockoutObservable<string>;
+    name: KnockoutObservable<string>;
+    type: KnockoutObservable<string>;
+    cssClass: KnockoutObservable<string>;
+    iconCssClass: KnockoutObservable<string>;
+    index: KnockoutObservable<number>;
+    remember: KnockoutObservable<boolean>;
+    isOpen: KnockoutObservable<boolean>;
+    isSelected: KnockoutObservable<boolean>;
+    isRenaming: KnockoutObservable<boolean>;
+    isDragging: KnockoutObservable<boolean>;
+    contents: any;
+    children: KnockoutObservableArray<TreeNode>;
+    canAddChildren: KnockoutComputed<boolean>;
+    showAddBefore: KnockoutComputed<boolean>;
+    showAddAfter: KnockoutComputed<boolean>;
+    isDropTarget: KnockoutComputed<boolean>;
+    isDraggable: KnockoutComputed<boolean>;
+    connectToSortable: KnockoutComputed<string>;
+    level: KnockoutComputed<number>;
     constructor(options: TreeNodeOptions, parent: TreeContainer, viewModel?: Tree, index?: number);
-    public hasChildren(): boolean;
-    public hasContext(): boolean;
-    public uniqueIdentifier(): string;
-    public createChild(node: any, index?: number): TreeNode;
-    public setViewModel(viewModel: any): void;
-    public findNode(id: string): TreeNode;
-    public selectNode(): void;
-    public openParents(): void;
-    public openSelfAndParents(): void;
-    public toggle(): void;
-    public addChild(node: any): void;
-    public rename(newName: string): void;
-    public deleteSelf(action?: string): void;
-    public move(node: TreeNode, parent?: TreeContainer, index?: number): void;
-    public moveBefore(node: TreeNode): void;
-    public moveAfter(node: TreeNode): void;
-    public getDragHolder(): any;
-    public setDragHolder(event: any, element: any): void;
-    public loadState(): void;
-    public saveState(): void;
-    public clicked(node: TreeNode, event: MouseEvent): any;
-    public doubleClick(event: MouseEvent): void;
+    hasChildren(): boolean;
+    hasContext(): boolean;
+    uniqueIdentifier(): string;
+    createChild(node: any, index?: number): TreeNode;
+    setViewModel(viewModel: any): void;
+    findNode(id: string): TreeNode;
+    selectNode(): void;
+    openParents(): void;
+    openSelfAndParents(): void;
+    toggle(): void;
+    addChild(node: any): void;
+    rename(newName: string): void;
+    deleteSelf(action?: string): void;
+    move(node: TreeNode, parent?: TreeContainer, index?: number): void;
+    moveBefore(node: TreeNode): void;
+    moveAfter(node: TreeNode): void;
+    getDragHolder(): any;
+    setDragHolder(event: any, element: any): void;
+    loadState(): void;
+    saveState(): void;
+    clicked(node: TreeNode, event: MouseEvent): any;
+    doubleClick(event: MouseEvent): void;
 }
 }
 
@@ -599,9 +606,15 @@ export interface Size {
     width: number;
     height: number;
 }
+/** Execute callback methods in a safe DOM modification environment. Usefull when creating HTML5 Application. */
 export function unsafe<T>(callback: () => T): T;
+/** Get current window size. */
 export function getWindowSize(): Size;
+export function bindAll(owner: any, ...methods: string[]): void;
+/** Get current vendor prefix */
 export function getVendorPrefix(): string;
+/** Prefix specified property using actual vendor prefix */
 export function prefixStyle(prop: string): string;
+/** Create a jQuery CSS Hook for specified property */
 export function createCssHook(prop: string): void;
 }
