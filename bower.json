@@ -29,9 +29,9 @@
     "test"
   ],
   "dependencies": {
-    "koutils": ">=0.1.6",
+    "koutils": "^1.0.1",
     "jquery": ">=1.9.0",
-    "requirejs-text": "~2.0.10"
+    "requirejs-text": "^2.0.14"
   },
   "devDependencies": {
     "mocha": "~1.17.1",

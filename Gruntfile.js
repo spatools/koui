@@ -1,7 +1,11 @@
 ﻿'use strict';
 
 module.exports = function (grunt) {
-    require('load-grunt-tasks')(grunt); // Load grunt tasks automatically
+    // Load grunt tasks automatically
+    require("jit-grunt")(grunt, {
+        nugetpack: "grunt-nuget",
+        nugetpush: "grunt-nuget"
+    });
     require('time-grunt')(grunt); // Time how long tasks take. Can help when optimizing build times
 
     var options = {
@@ -16,6 +20,7 @@ module.exports = function (grunt) {
             src: 'src',
             build: 'dist',
             less: 'less',
+            samples: 'samples',
             css: 'css',
             temp: '.temp',
             test: 'test'
@@ -25,7 +30,7 @@ module.exports = function (grunt) {
             options: {
                 target: "es3",
                 module: "amd",
-                sourcemap: false,
+                sourceMap: false,
                 declaration: false,
                 comments: false,
                 disallowbool: true,
@@ -33,6 +38,12 @@ module.exports = function (grunt) {
             },
             dev: {
                 src: "<%= paths.src %>/**/*.ts",
+                options: {
+                    sourceMap: true
+                }
+            },
+            samples: {
+                src: "<%= paths.samples %>/**/*.ts",
                 options: {
                     sourceMap: true
                 }
@@ -109,6 +120,7 @@ module.exports = function (grunt) {
 
             base: ["*.js"],
             dev: ["<%= paths.src %>/**/*.js"],
+            samples: ["<%= paths.samples %>/**/*.js"],
             dist: ["<%= paths.build %>/**/*.js"],
             test: ["<%= paths.test %>/**/*.js"]
         },
@@ -120,6 +132,9 @@ module.exports = function (grunt) {
             dev: {
                 src: "<%= paths.src %>/**/*.ts"
             },
+            samples: {
+                src: "<%= paths.samples %>/**/*.ts"
+            },
             test: {
                 src: "<%= paths.test %>/**/*.ts"
             }
@@ -129,15 +144,7 @@ module.exports = function (grunt) {
             test: {
                 options: {
                     port: "8080",
-                    open: "http://localhost:8080/test/index.html",
-                    keepalive: true
-                }
-            },
-            samples: {
-                options: {
-                    port: "8080",
-                    open: "http://localhost:8080/samples/index.html",
-                    keepalive: true
+                    livereload: 12321
                 }
             }
         },
@@ -148,19 +155,12 @@ module.exports = function (grunt) {
 
         clean: {
             dev: [
-                "<%= paths.src %>/**/*.d.ts",
-                "!<%= paths.src %>/base.d.ts",
-                "<%= paths.src %>/**/*.js",
-                "<%= paths.src %>/**/*.js.map"
+                "<%= paths.src %>/**/*.{d.ts,js,js.map}",
+                "!<%= paths.src %>/base.d.ts"
             ],
-            test: [
-                "<%= paths.test %>/**/*.d.ts",
-                "<%= paths.test %>/**/*.js",
-                "<%= paths.test %>/**/*.js.map"
-            ],
-            temp: [
-                "<%= paths.temp %>/**/*.*"
-            ]
+            samples: ["<%= paths.samples %>/**/*.{d.ts,js,js.map}"],
+            test: ["<%= paths.test %>/**/*.{d.ts,js,js.map}"],
+            temp: ["<%= paths.temp %>/**/*.*"]
         },
 
         nugetpack: {
@@ -180,20 +180,32 @@ module.exports = function (grunt) {
         },
 
         watch: {
-            tslint: {
-                files: ['<%= tslint.dev.src %>'],
-                tasks: ['tslint:dev']
-            },
-            jshint: {
-                files: ['<%= jshint.dev.src %>'],
-                tasks: ['jshint:dev']
-            },
-            test: {
-                files: ['<%= paths.test %>/*.*'],
-                tasks: ['test']
-            },
-            gruntfile: {
-                files: ['Gruntfile.js']
+            tslintdev: { files: ['<%= tslint.dev.src %>'], tasks: ['tslint:dev'] },
+            tslintsamples: { files: ['<%= tslint.samples.src %>'], tasks: ['samples:test'] },
+            tslinttest: { files: ['<%= tslint.test.src %>'], tasks: ['tslint:test'] },
+
+            jshintdev: { files: ['<%= jshint.dev %>'], tasks: ['jshint:dev'] },
+            jshintsamples: { files: ['<%= jshint.samples %>'], tasks: ['jshint:samples'] },
+            jshinttest: { files: ['<%= jshint.test %>'], tasks: ['jshint:test'] },
+
+            dev: { files: ['<%= typescript.dev.src %>'], tasks: ['typescript:dev'] },
+            samples: { files: ['<%= typescript.samples.src %>'], tasks: ['typescript:samples'] },
+            test: { files: ['<%= typescript.test.src %>'], tasks: ['typescript:test'] },
+
+            less: { files: ['<%= paths.less %>/**/*.less'], tasks: ['less:dist'] },
+
+            gruntfile: { files: ['Gruntfile.js'] },
+
+            livereload: {
+                options: {
+                    livereload: "<%= connect.test.options.livereload %>"
+                },
+                files: [
+                    "<%= paths.src %>/**/*.{js,js.map,html}",
+                    "<%= paths.samples %>/**/*.{js,js.map,html}",
+                    "<%= paths.test %>/**/*.{js,js.map,html}",
+                    "<%= paths.css %>/*.css"
+                ]
             }
         }
     });
@@ -204,10 +216,14 @@ module.exports = function (grunt) {
         grunt.file.write("dist/koui.d.ts", content);
     });
 
-    grunt.registerTask("declaration", ["typescript:declaration", "tsdamdconcat:declaration", "concat:declaration", "clean:temp", "fixdecla"]);
-    grunt.registerTask("build", ["tslint:dev", "typescript:dist", "jshint:dist", "copy:dist", "less:dist", "declaration"]);
     grunt.registerTask("dev", ["tslint:dev", "typescript:dev", "jshint:dev"]);
+    grunt.registerTask("build", ["tslint:dev", "typescript:dist", "jshint:dist", "copy:dist", "less:dist", "declaration"]);
+    grunt.registerTask("declaration", ["typescript:declaration", "tsdamdconcat:declaration", "concat:declaration", "clean:temp", "fixdecla"]);
+
     grunt.registerTask("test", ["dev", "tslint:test", "typescript:test", "jshint:test", "mocha:test", "clean"]);
+    grunt.registerTask("btest", ["dev", "tslint:test", "typescript:test", "jshint:test", "connect:test", "watch"]);
+    grunt.registerTask("samples", ["dev", "tslint:samples", "typescript:samples", "jshint:samples", "connect:test", "watch"]);
+
     grunt.registerTask("nuget", ["nugetpack", "nugetpush"]);
 
     grunt.registerTask("default", ["clean", "test", "build"]);
