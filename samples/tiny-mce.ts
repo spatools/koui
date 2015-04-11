@@ -25,7 +25,7 @@ requirejs.config({
         },
         "tinymce-theme": {
             deps: [
-                "tinymce", 
+                "tinymce",
                 "css!../bower_components/tinymce-release/skins/lightgray/skin.min.css",
                 "css!../bower_components/tinymce-release/skins/lightgray/content.min.css",
                 "css!../bower_components/tinymce-release/skins/lightgray/content.inline.min.css",
@@ -44,12 +44,12 @@ define(["knockout", "koui/tinymce", "tinymce-plugins-textcolor"], (ko) => {
         value = ko.observable(defaultVal),
         options = {
             value: value,
-            'browser_spellcheck': true,
-            'plugins': ['textcolor'],
-            'toolbar': 'undo redo | fontselect fontsizeselect forecolor | bold italic underline | bullist numlist | alignleft aligncenter alignright alignjustify',
-            'skin': false,
-            'menubar': false,
-            'statusbar': false
+            "browser_spellcheck": true,
+            "plugins": ["textcolor"],
+            "toolbar": "undo redo | fontselect fontsizeselect forecolor | bold italic underline | bullist numlist | alignleft aligncenter alignright alignjustify",
+            "skin": false,
+            "menubar": false,
+            "statusbar": false
         };
 
     ko.applyBindings({ value: value, options: options });
