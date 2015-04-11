@@ -27,9 +27,9 @@
       AMD
     </tags>
     <dependencies>
-      <dependency id="KoUtils" version="0.1.5" />
+      <dependency id="KoUtils" version="1.0.1" />
       <dependency id="JQuery" version="1.9.0" />
-      <dependency id="RequireJS.Text" version="2.1.6" />
+      <dependency id="RequireJS.Text" version="2.1.17" />
     </dependencies>
   </metadata>
   <files>
