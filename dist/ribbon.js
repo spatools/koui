@@ -1,5 +1,5 @@
 /// <reference path="../_definitions.d.ts" />
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
@@ -65,9 +65,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
     }
     var Ribbon = (function () {
         function Ribbon(options) {
-            this.backButtonClick = function () {
-                return null;
-            };
+            this.backButtonClick = function () { return null; };
             this.pages = utils.createObservableArray(options.pages, this.createPage);
             this.selectedPage = utils.createObservable(options.selectedPage);
             this.isCollapsed = utils.createObservable(options.isCollapsed, true);
@@ -196,9 +194,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
             this.icon = utils.createObservable(options.icon, "icon-base");
             this.selected = utils.createObservable(options.selected, false);
             this.class = utils.createObservable(options.class);
-            this.click = options.click || function () {
-                return null;
-            };
+            this.click = options.click || function () { return null; };
             _super.call(this);
         }
         return RibbonButton;
@@ -220,9 +216,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
         function RibbonListItem(options) {
             this.title = utils.createObservable(options.title, "List Item");
             this.icon = utils.createObservable(options.icon, "icon-list-base");
-            this.click = options.click || function () {
-                return null;
-            };
+            this.click = options.click || function () { return null; };
             _super.call(this);
         }
         return RibbonListItem;
@@ -332,7 +326,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var page = ko.unwrap(valueAccessor()), container = $("<div>");
             $(element).addClass("ribbon-page");
-            var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container), groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container), group = $("<li>").attr("data-bind", "ribbonGroup: $data").appendTo(groups);
+            var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container), groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container), group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: ('visible' in $data) ? visible : true").appendTo(groups);
             new ko.templateSources.anonymousTemplate(element).nodes(container.get(0));
             return { controlsDescendantBindings: true };
         },
@@ -509,9 +503,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
         update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var input = ko.unwrap(valueAccessor()), _class = ko.unwrap(input.class);
             if (_class) {
-                var classes = _class.split(" "), css = {};
-                classes.forEach(function (_class) { return css[_class] = true; });
-                ko.bindingHandlers.css.update(element, utils.createAccessor(css), allBindingsAccessor, viewModel, bindingContext);
+                ko.bindingHandlers.css.update(element, utils.createAccessor(_class), allBindingsAccessor, viewModel, bindingContext);
             }
             ko.renderTemplate(element, bindingContext.createChildContext(input), {}, element);
         }

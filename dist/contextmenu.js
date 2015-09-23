@@ -129,12 +129,17 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./engine",
                 return false;
             };
             if (ko.unwrap(value.hasHandle)) {
-                var $handle = $("<div>").addClass("ui-context-handle").on("click", onContextMenu).appendTo($element);
+                var $handle = $("<div>")
+                    .addClass("ui-context-handle")
+                    .on("click", onContextMenu)
+                    .appendTo($element);
                 if (value.handleCssClass) {
                     $handle.addClass(ko.unwrap(value.handleCssClass));
                 }
             }
-            $element.addClass("nocontext").on("contextmenu", onContextMenu);
+            $element
+                .addClass("nocontext")
+                .on("contextmenu", onContextMenu);
             $("html").click(function () {
                 $(".ui-context").remove();
             });

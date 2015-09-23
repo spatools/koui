@@ -207,7 +207,8 @@ define(["require", "exports", "knockout", "jquery", "./utils", "koutils/utils", 
             this.canAddChildren = ko.pureComputed(function () { return typeValueOrDefault("canAddChildren", _this.type(), _this.viewModel); });
             this.showAddBefore = ko.pureComputed(function () {
                 var parent = _this.parent(), dragHolder = viewModel.dragHolder();
-                if (parent.canAddChildren && parent.canAddChildren() && parent.isDropTarget && parent.isDropTarget() && viewModel.isDragging()) {
+                if (parent.canAddChildren && parent.canAddChildren() &&
+                    parent.isDropTarget && parent.isDropTarget() && viewModel.isDragging()) {
                     if (dragHolder === _this) {
                         return false;
                     }
@@ -540,9 +541,7 @@ define(["require", "exports", "knockout", "jquery", "./utils", "koutils/utils", 
     }
     ko.bindingHandlers.treenoderename = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element), updateHandler = function () {
-                nodeRenameUpdateValue(element, valueAccessor, allBindingsAccessor, viewModel);
-            };
+            var $element = $(element), updateHandler = function () { nodeRenameUpdateValue(element, valueAccessor, allBindingsAccessor, viewModel); };
             $element.on({
                 blur: updateHandler,
                 keyup: function (e) { return (e.which === 13) && updateHandler(); }

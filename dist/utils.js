@@ -2,7 +2,7 @@
 define(["require", "exports", "jquery"], function (require, exports, $) {
     /** Execute callback methods in a safe DOM modification environment. Usefull when creating HTML5 Application. */
     function unsafe(callback) {
-        if (typeof MSApp === "undefined") {
+        if (typeof MSApp === "undefined" || !MSApp.execUnsafeLocalFunction) {
             return callback.call(null);
         }
         else {

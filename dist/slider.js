@@ -99,7 +99,10 @@ define(["require", "exports", "knockout", "jquery", "./utils", "koutils/utils", 
     };
     ko.bindingHandlers.sliderEvents = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            $(element).on("mousedown touchstart", viewModel.onMouseDown).on("mousemove touchmove", viewModel.onMouseMove).on("mouseup mouseout touchend touchcancel", viewModel.onMouseUp);
+            $(element)
+                .on("mousedown touchstart", viewModel.onMouseDown)
+                .on("mousemove touchmove", viewModel.onMouseMove)
+                .on("mouseup mouseout touchend touchcancel", viewModel.onMouseUp);
         }
     };
 });

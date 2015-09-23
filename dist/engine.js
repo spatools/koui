@@ -8,7 +8,6 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./utils"],
     }
     var RequireSource = (function () {
         function RequireSource(source, options) {
-            var _this = this;
             if (options === void 0) { options = {}; }
             this.source = source;
             this.options = options;
@@ -25,8 +24,12 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./utils"],
             tmpl.data = {};
             this.template = tmpl;
             if (options.afterRender) {
-                var origAfterRender = options.afterRender;
-                this.options.afterRender = function () { return _this.isLoaded && origAfterRender.apply(_this.options, arguments); };
+                var self = this, origAfterRender = options.afterRender;
+                this.options.afterRender = function () {
+                    if (self.isLoaded) {
+                        origAfterRender.apply(self.options, arguments);
+                    }
+                };
             }
             sources[source] = this;
         }
