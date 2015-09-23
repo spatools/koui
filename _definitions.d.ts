@@ -4,8 +4,24 @@
 /// <reference path="bower_components/koutils/dist/koutils.d.ts" />
 /// <reference path="src/base.d.ts" />
 
+interface Document {
+    createEventObject(): Event;
+    attachEvent(eventName: string, event: Function): void;
+    detachEvent(eventName: string, event: Function): void;
+}
+
+interface Element {
+    fireEvent(eventName: string, event: Event): void;
+    attachEvent(eventName: string, event: Function): void;
+    detachEvent(eventName: string, event: Function): void;
+}
+
 interface Function {
     result?: any; // Memoization Pattern
+}
+
+interface MSApp {
+    execUnsafeLocalFunction?: <T>(fn: () => T) => T;
 }
 
 interface KnockoutTemplateSourcesDomElement {

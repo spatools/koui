@@ -29,7 +29,7 @@
     "test"
   ],
   "dependencies": {
-    "koutils": "^1.0.1",
+    "koutils": "^1.0.10",
     "jquery": ">=1.9.0",
     "requirejs-text": "^2.0.14"
   },
@@ -38,7 +38,6 @@
     "should": "3.1.2",
     "sinon": "http://sinonjs.org/releases/sinon-1.8.1.js",
     "require-css": "~0.1.2",
-    "tinymce-release": "~4.0.16",
     "jquery-ui": "~1.10.4"
   }
 }
