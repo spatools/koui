@@ -50,8 +50,14 @@ export class RequireSource {
             this.template = tmpl;
 
             if (options.afterRender) {
-                var origAfterRender = options.afterRender;
-                this.options.afterRender = () => this.isLoaded && origAfterRender.apply(this.options, arguments);
+                var self = this,
+                    origAfterRender = options.afterRender;
+
+                this.options.afterRender = function () {
+                    if (self.isLoaded) {
+                        origAfterRender.apply(self.options, arguments);
+                    }
+                };
             }
 
             sources[source] = this;
