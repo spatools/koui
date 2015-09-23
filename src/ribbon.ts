@@ -551,7 +551,7 @@ ko.bindingHandlers.ribbonPage = {
         var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container),
 
             groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container),
-            group = $("<li>").attr("data-bind", "ribbonGroup: $data").appendTo(groups);
+            group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: ('visible' in $data) ? visible : true").appendTo(groups);
 
         new ko.templateSources.anonymousTemplate(element).nodes(container.get(0));
         return { controlsDescendantBindings: true };
@@ -786,9 +786,7 @@ ko.bindingHandlers.ribbonInput = {
             _class = ko.unwrap(input.class);
 
         if (_class) {
-            var classes = _class.split(" "), css: any = {};
-            classes.forEach(_class => css[_class] = true);
-            ko.bindingHandlers.css.update(element, utils.createAccessor(css), allBindingsAccessor, viewModel, bindingContext);
+            ko.bindingHandlers.css.update(element, utils.createAccessor(_class), allBindingsAccessor, viewModel, bindingContext);
         }
 
         ko.renderTemplate(element, bindingContext.createChildContext(input), {}, element);
