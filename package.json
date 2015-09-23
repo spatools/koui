@@ -1,6 +1,6 @@
 {
   "name": "koui",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Knockout UI widgets to help Knockout app development",
   "main": "dist/koui.js",
   "scripts": {
