@@ -169,6 +169,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
             this.title = utils.createObservable(options.title, "Group Title");
             this.priority = utils.createObservable(options.priority, 0);
             this.isCollapsed = utils.createObservable(options.isCollapsed, false);
+            this.visible = utils.createObservable(options.visible, true);
             this.icon = utils.createObservable(options.icon, "icon-base");
             this.content = utils.createObservableArray(options.content, createRibbonItem);
         }
@@ -326,7 +327,7 @@ define(["require", "exports", "knockout", "jquery", "koutils/utils", "./slider"]
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var page = ko.unwrap(valueAccessor()), container = $("<div>");
             $(element).addClass("ribbon-page");
-            var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container), groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container), group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: ('visible' in $data) ? visible : true").appendTo(groups);
+            var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container), groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container), group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: visible").appendTo(groups);
             new ko.templateSources.anonymousTemplate(element).nodes(container.get(0));
             return { controlsDescendantBindings: true };
         },

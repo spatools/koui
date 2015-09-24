@@ -291,6 +291,7 @@ export interface RibbonGroupOptions {
     title?: any;
     priority?: any;
     isCollapsed?: any;
+    visible?: any;
     icon?: any;
     content?: any;
 }
@@ -300,6 +301,7 @@ export class RibbonGroup {
     title: KnockoutObservable<string>;
     priority: KnockoutObservable<number>;
     isCollapsed: KnockoutObservable<boolean>;
+    visible: KnockoutObservable<boolean>;
     icon: KnockoutObservable<string>;
     content: KnockoutObservableArray<RibbonItem>;
     constructor(options: RibbonGroupOptions);
