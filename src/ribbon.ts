@@ -235,6 +235,7 @@ export interface RibbonGroupOptions {
     title?: any;
     priority?: any;
     isCollapsed?: any;
+    visible?: any;
     icon?: any;
     content?: any;
 }
@@ -245,6 +246,7 @@ export class RibbonGroup {
     public title: KnockoutObservable<string>;
     public priority: KnockoutObservable<number>;
     public isCollapsed: KnockoutObservable<boolean>;
+    public visible: KnockoutObservable<boolean>;
     public icon: KnockoutObservable<string>;
     public content: KnockoutObservableArray<RibbonItem>;
 
@@ -252,6 +254,7 @@ export class RibbonGroup {
         this.title = utils.createObservable(options.title, "Group Title");
         this.priority = utils.createObservable(options.priority, 0);
         this.isCollapsed = utils.createObservable(options.isCollapsed, false);
+        this.visible = utils.createObservable(options.visible, true);
         this.icon = utils.createObservable(options.icon, "icon-base");
         this.content = utils.createObservableArray(options.content, createRibbonItem);
     }
@@ -551,7 +554,7 @@ ko.bindingHandlers.ribbonPage = {
         var a = $("<a>").addClass("ribbon-page-header").attr("data-bind", "click: function() { $root.selectPage.call($root, $data) }, text: title").appendTo(container),
 
             groups = $("<ul>").addClass("ribbon-groups").attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }").appendTo(container),
-            group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: ('visible' in $data) ? visible : true").appendTo(groups);
+            group = $("<li>").attr("data-bind", "ribbonGroup: $data, visible: visible").appendTo(groups);
 
         new ko.templateSources.anonymousTemplate(element).nodes(container.get(0));
         return { controlsDescendantBindings: true };
