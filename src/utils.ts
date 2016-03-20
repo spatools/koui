@@ -1,9 +1,54 @@
+import * as ko from "knockout";
 import * as $ from "jquery";
+
+export interface Point {
+    x: number;
+    y: number;
+}
 
 export interface Size {
     width: number;
     height: number;
 }
+
+//#region Knockout Utilities
+
+/** Create value accessor for custom bindings. */
+export function createAccessor<T>(value: T): () => T {
+    return () => value;
+}
+
+/** Return an observable from value (or _default if undefined). If value is subscribable, returns value directly. */
+export function createObservable<T>(value: any, _default?: T): ko.Observable<T> {
+    if (typeof value === "undefined" || value === null) {
+        return ko.observable(_default);
+    }
+
+    if (ko.isSubscribable(value)) {
+        return value;
+    }
+
+    return ko.observable(value);
+}
+
+/** Return an observable from value (or _default if undefined). If value is subscribable, returns value directly. */
+export function createObservableArray(value: any, mapFunction?: (obj: any) => any, context?: any): ko.ObservableArray<any> {
+    if (typeof value === "undefined") {
+        return ko.observableArray();
+    }
+
+    if (ko.isSubscribable(value) && Array.isArray(value())) {
+        return value;
+    }
+
+    if (Array.isArray(value) && typeof mapFunction === "function") {
+        value = value.map(mapFunction, context);
+    }
+
+    return ko.observableArray(value);
+}
+
+//#endregion
 
 /** Execute callback methods in a safe DOM modification environment. Usefull when creating HTML5 Application. */
 export function unsafe<T>(callback: () => T): T {

@@ -2,8 +2,7 @@
 
 import * as ko from "knockout";
 import * as $ from "jquery";
-
-import utils = require("koutils/utils");
+import * as utils from "./utils";
 
 import {
     defaultInstance as templateEngine
