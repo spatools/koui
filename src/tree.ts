@@ -1,29 +1,17 @@
-/// <reference path="../_definitions.d.ts" />
 /// <amd-dependency path="jqueryui" />
 
-import ko = require("knockout");
-import $ = require("jquery");
-import UIutils = require("./utils");
-import utils = require("koutils/utils");
+import * as ko from "knockout";
+import * as $ from "jquery";
+import * as utils from "./utils";
+import * as ctx from "./contextmenu";
 
-import engine = require("./engine");
-import ctx = require("./contextmenu");
+import {
+    defaultInstance as templateEngine
+} from "./engine";
 
-var stateCacheKey = "__SPA_TREE_STATE__",
-    stateActiveKey = "__SPA_TREE_ACTIVE_ITEM__";
-
-//#region Private Methods
-
-function typeValueOrDefault<T>(param: string, type: string, viewModel: Tree, index?: number): T {
-    var globalDefault = viewModel.defaults[param];
-    if (viewModel.defaults[type] === undefined || viewModel.defaults[type][param] === undefined) {
-        return ko.unwrap(globalDefault);
-    }
-
-    return ko.unwrap(viewModel.defaults[type][param]);
-}
-
-//#endregion
+const
+    STATE_CACHE_KEY = "__SPA_TREE_STATE__",
+    STATE_ACTIVE_KEY = "__SPA_TREE_ACTIVE_ITEM__";
 
 //#region Defaults
 
@@ -83,19 +71,19 @@ export interface TreeOptions {
 }
 
 export interface TreeContainer {
-    children: KnockoutObservableArray<TreeNode>;
-    remember: KnockoutObservable<boolean>;
-    name?: KnockoutObservable<string>;
-    type?: KnockoutObservable<string>;
-    parent?: KnockoutObservable<TreeContainer>;
-    isOpen?: KnockoutObservable<boolean>;
-    level?: KnockoutComputed<number>;
-    canAddChildren?: KnockoutComputed<boolean>;
-    isDropTarget?: KnockoutComputed<boolean>;
+    children: ko.ObservableArray<TreeNode>;
+    remember: ko.Observable<boolean>;
+    name?: ko.Observable<string>;
+    type?: ko.Observable<string>;
+    parent?: ko.Observable<TreeContainer>;
+    isOpen?: ko.Observable<boolean>;
+    level?: ko.Computed<number>;
+    canAddChildren?: ko.Computed<boolean>;
+    isDropTarget?: ko.Computed<boolean>;
 }
 
 export class Tree implements TreeContainer {
-    public engine = engine.defaultInstance;
+    public engine = templateEngine;
     public defaults: TreeDefaults = {};
     public handlers: TreeHandlers = {
         selectNode: function (node: TreeNode, onSuccess: () => void ): void {
@@ -132,13 +120,13 @@ export class Tree implements TreeContainer {
         }
     };
 
-    public id: KnockoutObservable<string>;
-    public remember: KnockoutObservable<boolean>;
-    public dragHolder: KnockoutObservable<any>;
-    public isDragging: KnockoutObservable<boolean> = ko.observable(false);
+    public id: ko.Observable<string>;
+    public remember: ko.Observable<boolean>;
+    public dragHolder: ko.Observable<any>;
+    public isDragging: ko.Observable<boolean> = ko.observable(false);
 
-    public children: KnockoutObservableArray<TreeNode>;
-    public selectedNode: KnockoutObservable<TreeNode>;
+    public children: ko.ObservableArray<TreeNode>;
+    public selectedNode: ko.Observable<TreeNode>;
     public tree: HTMLElement = null;
     public contextMenu: ctx.ContextMenuBuilder;
 
@@ -309,33 +297,33 @@ export interface TreeNodeOptions {
 }
 
 export class TreeNode implements TreeContainer {
-    public parent: KnockoutObservable<TreeContainer>;
+    public parent: ko.Observable<TreeContainer>;
     public contextMenu: ctx.ContextMenuBuilder;
 
-    public id: KnockoutObservable<string>;
-    public name: KnockoutObservable<string>;
-    public type: KnockoutObservable<string>;
-    public cssClass: KnockoutObservable<string>;
-    public iconCssClass: KnockoutObservable<string>;
-    public index: KnockoutObservable<number>;
-    public remember: KnockoutObservable<boolean>;
+    public id: ko.Observable<string>;
+    public name: ko.Observable<string>;
+    public type: ko.Observable<string>;
+    public cssClass: ko.Observable<string>;
+    public iconCssClass: ko.Observable<string>;
+    public index: ko.Observable<number>;
+    public remember: ko.Observable<boolean>;
 
-    public isOpen: KnockoutObservable<boolean>;
-    public isSelected: KnockoutObservable<boolean>;
-    public isRenaming: KnockoutObservable<boolean>;
-    public isDragging: KnockoutObservable<boolean> = ko.observable(false);
+    public isOpen: ko.Observable<boolean>;
+    public isSelected: ko.Observable<boolean>;
+    public isRenaming: ko.Observable<boolean>;
+    public isDragging: ko.Observable<boolean> = ko.observable(false);
 
     public contents: any;
-    public children: KnockoutObservableArray<TreeNode>;
+    public children: ko.ObservableArray<TreeNode>;
 
-    public canAddChildren: KnockoutComputed<boolean>;
-    public showAddBefore: KnockoutComputed<boolean>;
-    public showAddAfter: KnockoutComputed<boolean>;
-    public isDropTarget: KnockoutComputed<boolean>;
-    public isDraggable: KnockoutComputed<boolean>;
-    public connectToSortable: KnockoutComputed<string>;
+    public canAddChildren: ko.Computed<boolean>;
+    public showAddBefore: ko.Computed<boolean>;
+    public showAddAfter: ko.Computed<boolean>;
+    public isDropTarget: ko.Computed<boolean>;
+    public isDraggable: ko.Computed<boolean>;
+    public connectToSortable: ko.Computed<string>;
 
-    public level: KnockoutComputed<number>;
+    public level: ko.Computed<number>;
 
     constructor(options: TreeNodeOptions, parent: TreeContainer, public viewModel?: Tree, index?: number) {
         var defaultType = typeValueOrDefault<string>("childType", parent === viewModel ? undefined : parent.type(), viewModel); // defaults
@@ -348,7 +336,7 @@ export class TreeNode implements TreeContainer {
         this.type = utils.createObservable(options.type, defaultType);
         this.cssClass = utils.createObservable(options.cssClass, this.type());
         this.iconCssClass = utils.createObservable(options.iconCssClass, "");
-        this.index = utils.createObservable(options.index, utils.is(index, "undefined") ? parent.children().length : index);
+        this.index = utils.createObservable(options.index, typeof index === "undefined" ? parent.children().length : index);
         this.remember = parent.remember;
 
         this.isOpen = utils.createObservable(options.isOpen, false);
@@ -415,7 +403,7 @@ export class TreeNode implements TreeContainer {
 
         this.loadState();
 
-        UIutils.bindAll(this, "toggle", "clicked", "doubleClick");
+        utils.bindAll(this, "toggle", "clicked", "doubleClick");
     }
 
     public hasChildren(): boolean {
@@ -616,7 +604,7 @@ export class TreeNode implements TreeContainer {
             return;
         }
 
-        var state = JSON.parse(localStorage.getItem(stateCacheKey)),
+        var state = JSON.parse(localStorage.getItem(STATE_CACHE_KEY)),
             uid = this.uniqueIdentifier();
 
         if (state) {
@@ -625,7 +613,7 @@ export class TreeNode implements TreeContainer {
                 this.isOpen(true);
             }
 
-            var active = state[stateActiveKey];
+            var active = state[STATE_ACTIVE_KEY];
             if (active && active === uid) {
                 this.isSelected(true);
             }
@@ -636,16 +624,16 @@ export class TreeNode implements TreeContainer {
             return;
         }
 
-        var state = JSON.parse(localStorage.getItem(stateCacheKey)) || {},
+        var state = JSON.parse(localStorage.getItem(STATE_CACHE_KEY)) || {},
             uid = this.uniqueIdentifier();
 
         state[uid] = { open: this.isOpen() };
 
         if (this.isSelected()) {
-            state[stateActiveKey] = uid;
+            state[STATE_ACTIVE_KEY] = uid;
         }
 
-        localStorage.setItem(stateCacheKey, JSON.stringify(state));
+        localStorage.setItem(STATE_CACHE_KEY, JSON.stringify(state));
     }
 
     public clicked(node: TreeNode, event: MouseEvent): any {
@@ -671,15 +659,39 @@ export class TreeNode implements TreeContainer {
 
 //#region Handlers
 
+declare module "knockout" {
+    export interface BindingHandlers {
+        treenodedrag: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+            update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+        treenodedrop: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+            update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+        treenodeselectvisible: {
+            update(element: HTMLInputElement, valueAccessor: () => any): void;
+        };
+        treenoderename: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+            update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+        tree: {
+            init(element: Node, valueAccessor: () => any): void;
+            update(element: Node, valueAccessor: () => any): void;
+        };
+    }
+} 
+
 ko.bindingHandlers.treenodedrag = {
-    init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element = $(element),
             node = viewModel,
-            dragOptions: any = {
+            dragOptions = {
                 revert: "invalid",
                 revertDuration: 250,
                 cancel: "span.handle",
-                cursor: typeValueOrDefault("dragCursor", node.type(), node.viewModel),
+                cursor: typeValueOrDefault<string>("dragCursor", node.type(), node.viewModel),
                 cursorAt: typeValueOrDefault("dragCursorAt", node.type(), node.viewModel),
                 appendTo: "body",
                 connectToSortable: viewModel.connectToSortable(),
@@ -705,7 +717,7 @@ ko.bindingHandlers.treenodedrag = {
 
         $element.draggable(dragOptions);
     },
-    update: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    update: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element = $(element),
             active = ko.unwrap(valueAccessor());
 
@@ -717,7 +729,7 @@ ko.bindingHandlers.treenodedrag = {
     }
 };
 ko.bindingHandlers.treenodedrop = {
-    init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element = $(element),
             value = valueAccessor() || {},
             handler = ko.unwrap(value.onDropComplete),
@@ -733,7 +745,7 @@ ko.bindingHandlers.treenodedrop = {
             };
         $element.droppable(dropOptions);
     },
-    update: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    update: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element = $(element),
             active = ko.unwrap(valueAccessor()).active;
 
@@ -746,16 +758,17 @@ ko.bindingHandlers.treenodedrop = {
 };
 
 ko.bindingHandlers.treenodeselectvisible = {
-    update: function (element: any, valueAccessor: () => any): void {
-        ko.bindingHandlers.visible.update.call(this, element, valueAccessor);
-        var isCurrentlyInvisible = element.style.display === "none";
+    update: function (element, valueAccessor): void {
+        ko.bindingHandlers.visible.update(element, valueAccessor);
+        
+        const isCurrentlyInvisible = element.style.display === "none";
         if (!isCurrentlyInvisible) {
             element.select();
         }
     }
 };
 
-function nodeRenameUpdateValue(element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+function nodeRenameUpdateValue(element, valueAccessor, allBindingsAccessor, viewModel): void {
     var handler = allBindingsAccessor().onRenameComplete,
         elementValue = ko.selectExtensions.readValue(element);
 
@@ -763,7 +776,7 @@ function nodeRenameUpdateValue(element: HTMLElement, valueAccessor: () => any, a
     viewModel.isRenaming(false);
 }
 ko.bindingHandlers.treenoderename = {
-    init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element = $(element),
             updateHandler = () => { nodeRenameUpdateValue(element, valueAccessor, allBindingsAccessor, viewModel); };
 
@@ -772,24 +785,37 @@ ko.bindingHandlers.treenoderename = {
             keyup: e => (e.which === 13) && updateHandler()
         });
     },
-    update: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
-        ko.bindingHandlers.value.update.call(this, element, valueAccessor);
+    update: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
+        ko.bindingHandlers.value.update(element, valueAccessor);
     }
 };
 
 ko.bindingHandlers.tree = {
-    init: function (element: HTMLElement, valueAccessor: () => any): any {
+    init: function (element, valueAccessor): any {
         var value = ko.unwrap(valueAccessor());
         value.tree = element; // needed to recalculate node sizes when multiple trees
         console.log("Initialize tree " + value.children().length + " root nodes found");
 
         return { controlsDescendantBindings: true };
     },
-    update: function (element: HTMLElement, valueAccessor: () => any): void {
+    update: function (element, valueAccessor): void {
         var value = ko.unwrap(valueAccessor());
-        ko.renderTemplate("text!koui/tree/container.html", value, { templateEngine: engine.defaultInstance }, element);
+        ko.renderTemplate("text!koui/tree/container.html", value, { templateEngine }, element);
         value.recalculateSizes();
     }
 };
+
+//#endregion
+
+//#region Private Methods
+
+function typeValueOrDefault<T>(param: string, type: string, viewModel: Tree, index?: number): T {
+    var globalDefault = viewModel.defaults[param];
+    if (viewModel.defaults[type] === undefined || viewModel.defaults[type][param] === undefined) {
+        return ko.unwrap(globalDefault);
+    }
+
+    return ko.unwrap(viewModel.defaults[type][param]);
+}
 
 //#endregion
