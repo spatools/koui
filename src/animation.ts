@@ -1,7 +1,8 @@
-/// <reference path="../_definitions.d.ts" />
-
-import utils = require("./utils");
-import event = require("./event");
+import * as event from "./event";
+import {
+    prefixStyle,
+    getVendorPrefix
+} from "./utils";
 
 export interface AnimationOptions {
     duration: number;
@@ -36,14 +37,14 @@ function ensureNames(type: string) {
     }
 
     if (!current.style)
-        current.style = utils.prefixStyle(type);
+        current.style = prefixStyle(type);
 
     tmp = type + "end";
     if (event.check(tmp)) {
         current.event = tmp;
     }
     else {
-        if (!prefix) prefix = utils.getVendorPrefix();
+        if (!prefix) prefix = getVendorPrefix();
 
         tmp = prefix + upperFirst(type) + "End";
         if (event.check(tmp)) current.event = tmp;
@@ -136,7 +137,7 @@ export function transitionTo(element: HTMLElement, from: { [key: string]: any },
     if (from) {
         for (prop in from) {
             if ((val = from[prop])) {
-                element.style[utils.prefixStyle(prop)] = val;
+                element.style[prefixStyle(prop)] = val;
             }
         }
     }
@@ -150,7 +151,7 @@ export function transitionTo(element: HTMLElement, from: { [key: string]: any },
         element.style[transitionProp] = transitionStyle.join(" ");
         for (prop in to) {
             if ((val = to[prop])) {
-                element.style[utils.prefixStyle(prop)] = val;
+                element.style[prefixStyle(prop)] = val;
             }
         }
     }, 1);

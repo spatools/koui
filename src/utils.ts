@@ -1,6 +1,4 @@
-/// <reference path="../_definitions.d.ts" />
-
-import $ = require("jquery");
+import * as $ from "jquery";
 
 export interface Size {
     width: number;
