@@ -1,23 +1,22 @@
-﻿/// <reference path="../_definitions.d.ts" />
+﻿import * as ko from "knockout";
+import * as $ from "jquery";
+import * as utils from "./utils";
 
+import {
+    defaultInstance as templateEngine
+} from "./engine";
 
-import ko = require("knockout");
-import $ = require("jquery");
-
-import UIutils = require("./utils");
-import utils = require("koutils/utils");
-import engine = require("./engine");
-
-function getBestStep(value: number, step: number): number {
-    if (!step) {
-        return value;
+declare module "knockout" {
+    export interface BindingHandlers {
+        slider: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+            update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        };
+        sliderEvents: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        };
     }
-
-    var rest = value % step,
-        upper = rest >= step / 2;
-
-    return upper ? value + (step - rest) : value - rest;
-}
+} 
 
 export interface SliderOptions {
     value?: any;
@@ -32,21 +31,21 @@ export class Slider {
     private $handle: JQuery;
     private isMouseDown: boolean = false;
 
-    private elementWidth: KnockoutObservable<number> = ko.observable(0);
-    private handleWidth: KnockoutObservable<number> = ko.observable(0);
+    private elementWidth: ko.Observable<number> = ko.observable(0);
+    private handleWidth: ko.Observable<number> = ko.observable(0);
 
-    public value: KnockoutObservable<number>;
-    public min: KnockoutObservable<number>;
-    public max: KnockoutObservable<number>;
-    public step: KnockoutObservable<number>;
-    public coef: KnockoutComputed<number>;
-    public position: KnockoutComputed<number>;
+    public value: ko.Observable<number>;
+    public min: ko.Observable<number>;
+    public max: ko.Observable<number>;
+    public step: ko.Observable<number>;
+    public coef: ko.Computed<number>;
+    public position: ko.Computed<number>;
 
     constructor(value: number);
-    constructor(value: KnockoutSubscribable<number>);
+    constructor(value: ko.Subscribable<number>);
     constructor(options: SliderOptions);
     constructor(options: any) {
-        if (!utils.isObject(options) || ko.isSubscribable(options))
+        if (typeof options === "number" || ko.isSubscribable(options))
             options = { value: options };
 
         this.value = utils.createObservable(options.value, 0);
@@ -54,19 +53,22 @@ export class Slider {
         this.max = utils.createObservable(options.max, 1);
         this.step = utils.createObservable(options.step, 0.01);
 
-        this.coef = ko.pureComputed({
-            read: function (): number {
-                var max = this.max(),
-                    min = this.min(),
-                    val = this.value();
+        this.coef = ko.pureComputed<number>({
+            read: function () {
+                const
+                    max = this.max(),
+                    min = this.min();
+                    
+                let val = this.value();
 
                 if (min !== 0 || max !== 1)
                     val = (val - min) / (max - min);
 
                 return val;
             },
-            write: function (newCoef: number) {
-                var max = this.max(),
+            write: function (newCoef) {
+                const
+                    max = this.max(),
                     min = this.min();
 
                 if (min !== 0 || max !== 1)
@@ -77,20 +79,20 @@ export class Slider {
             owner: this
         });
 
-        this.position = ko.pureComputed({
-            read: function (): number {
+        this.position = ko.pureComputed<number>({
+            read: function () {
                 var coef = this.coef();
                 this.updateWidths();
                 return Math.round((coef * this.elementWidth()) - (this.handleWidth() * coef));
             },
-            write: function (pos: number) {
+            write: function (pos) {
                 this.updateWidths();
                 this.coef(pos / this.elementWidth());
             },
             owner: this
         });
 
-        UIutils.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
+        utils.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
     }
 
     public init(element: Element): void {
@@ -136,18 +138,18 @@ export class Slider {
 
 ko.bindingHandlers.slider = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var slider: Slider = ko.unwrap(valueAccessor());
+        let slider: Slider = ko.unwrap(valueAccessor());
 
         if (!(slider instanceof Slider))
-            slider = element._slider = new Slider(slider);
+            slider = element["_slider"] = new Slider(slider);
 
-        slider.init(element);
+        slider.init(element as Element);
 
         return { controlsDescendantBindings: true };
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var slider = element._slider || ko.unwrap(valueAccessor());
-        ko.renderTemplate("text!koui/slider/container.html", slider, { templateEngine: engine.defaultInstance, afterRender: slider.afterRender }, element);
+        const slider = (element["_slider"] || ko.unwrap(valueAccessor())) as Slider;
+        ko.renderTemplate("text!koui/slider/container.html", slider, { templateEngine, afterRender: slider.afterRender }, element);
     }
 };
 
@@ -159,3 +161,15 @@ ko.bindingHandlers.sliderEvents = {
             .on("mouseup mouseout touchend touchcancel", viewModel.onMouseUp);
     }
 };
+
+function getBestStep(value: number, step: number): number {
+    if (!step) {
+        return value;
+    }
+
+    var rest = value % step,
+        upper = rest >= step / 2;
+
+    return upper ? value + (step - rest) : value - rest;
+}
+

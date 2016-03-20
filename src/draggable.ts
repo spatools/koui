@@ -1,4 +1,3 @@
-
 import * as ko from "knockout";
 import * as $ from "jquery";
 import * as utils from "./utils";
