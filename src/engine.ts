@@ -1,28 +1,32 @@
-/// <reference path="../_definitions.d.ts" />
-/// <reference path="../typings/requirejs/require.d.ts" />
+import * as ko from "knockout";
+import * as $ from "jquery";
+import * as utils from "./utils";
 
-import ko = require("knockout");
-import $ = require("jquery");
-import utils = require("koutils/utils");
-import UIutils = require("./utils");
-
-var sourceRegex = /^text!(.+)/,
+const
+    SOURCE_REGEXP = /^text!(.+)/,
+    
     sources: { [key: string]: RequireSource } = {};
+    
+//#region Typings
 
-function parseMarkup(markup: string): Element {
-    var allElements = $.parseHTML(markup);
-    return $(allElements).wrapAll("<div>").parent().get(0);
+declare module "knockout" {
+    export module templateSources {
+        export var require: typeof RequireSource;
+    }
+    
+    // export var requireTemplateEngine: typeof RequireEngine;
 }
+
+//#endregion
 
 //#region Require Template Source
 
-export interface RequireTemplateObservable extends KnockoutObservable<string> {
+export interface RequireTemplateObservable extends ko.Observable<string> {
     data: any;
 }
 
-export interface RequireSourceOptions {
+export interface RequireSourceOptions extends ko.TemplateOptions {
     loadingTemplate?: string;
-    afterRender?: () => any;
 }
 
 export class RequireSource {
@@ -34,7 +38,7 @@ export class RequireSource {
     constructor(
         public source: string,
         public options: RequireSourceOptions = {}) {
-            if (!utils.is(source, "string")) {
+            if (typeof source !== "string") {
                 throw new Error("Require Template Source need string template source");
             }
 
@@ -42,15 +46,16 @@ export class RequireSource {
                 return sources[source];
             }
 
-            this.name = source.match(sourceRegex)[1];
+            this.name = source.match(SOURCE_REGEXP)[1];
 
-            var tmpl: any = ko.observable(this.options.loadingTemplate || RequireEngine.defaults.loading);
+            const tmpl: any = ko.observable(this.options.loadingTemplate || RequireEngine.defaults.loading);
             tmpl.data = {};
 
             this.template = tmpl;
 
             if (options.afterRender) {
-                var self = this,
+                const
+                    self = this,
                     origAfterRender = options.afterRender;
 
                 this.options.afterRender = function () {
@@ -64,7 +69,7 @@ export class RequireSource {
     }
 
     public static isRequireTemplateSource(value: string): boolean {
-        return sourceRegex.test(value);
+        return SOURCE_REGEXP.test(value);
     }
 
     public text(): string;
@@ -94,13 +99,13 @@ export class RequireSource {
         this.template.data[key] = value;
     }
 
-    public nodes(): Element;
-    public nodes(element: Element): void;
-    public nodes(element?: Element): any {
+    public nodes(): Node[];
+    public nodes(element: Node[]): void;
+    public nodes(element?: Node[]): any {
         if (arguments.length === 0) {
-            var markup = this.text(); // to register dependency
+            const markup = this.text(); // to register dependency
             if (!this.template.data.__NODES__) {
-                this.template.data.__NODES__ = UIutils.unsafe(() => parseMarkup(markup));
+                this.template.data.__NODES__ = utils.unsafe(() => [parseMarkup(markup)]);
             }
 
             return this.template.data.__NODES__;
@@ -130,87 +135,64 @@ export class RequireSource {
 
 ko.templateSources.require = RequireSource;
 
+function parseMarkup(markup: string): HTMLElement {
+    const allElements = $.parseHTML(markup);
+    return $(allElements).wrapAll("<div>").parent().get(0);
+}
+
 //#endregion
 
 //#region Require Template Engine
 
-//#region Try Typescript fails
-/*
 export class RequireEngine extends ko.templateEngine {
-    private innerEngine: KnockoutTemplateEngine;
-    public allowTemplateRewritting: boolean = false;
+    private innerEngine: ko.templateEngine;
+    public allowTemplateRewriting: boolean = false;
 
     public static defaults: { loading: string; engine: any } = {
         loading: "<div class='template-loading'></div>",
         engine: ko.nativeTemplateEngine
-    }
+    };
 
-    constructor(innerEngine?: KnockoutTemplateEngine) {
+    constructor(innerEngine?: ko.templateEngine) {
+        super();
+        this.allowTemplateRewriting = false;
         this.innerEngine = innerEngine || new RequireEngine.defaults.engine();
     }
 
-    public makeTemplateSource(template: any, templateDocument: any, options?: any): any {
+    public makeTemplateSource(template: any, templateDocument?: Document, options?: RequireSourceOptions): any {
         // Require template
         if (typeof template == "string" && RequireSource.isRequireTemplateSource(template)) {
             return new RequireSource(template, options);
         }
 
         //Call base method
-        return this.innerEngine.makeTemplateSource.call(this.innerEngine, template, templateDocument);
+        return this.innerEngine.makeTemplateSource(template, templateDocument);
     }
 
-    public renderTemplateSource(templateSource: any, bindingContext: KnockoutBindingContext, options?: any): any {
-        return this.innerEngine.renderTemplateSource.apply(this.innerEngine, arguments);
+    public renderTemplateSource(templateSource: ko.TemplateSource, bindingContext: ko.BindingContext<any>, options?: RequireSourceOptions, templateDocument?: Document): Node[] {
+        return this.innerEngine.renderTemplateSource(templateSource, bindingContext, options, templateDocument);
     }
 
-    public renderTemplate(template: any, bindingContext: KnockoutBindingContext, options: any, templateDocument: any): any {
+    public renderTemplate(template: any, bindingContext: ko.BindingContext<any>, options: RequireSourceOptions, templateDocument?: Document): Node[] {
         var templateSource = this.makeTemplateSource(template, templateDocument, options);
         return this.renderTemplateSource(templateSource, bindingContext, options);
     }
+    
+    public addTemplate(key: string, template: string): void {
+        if (!RequireSource.isRequireTemplateSource(key)) {
+            return;
+        }
+        
+        define(key, [], () => template);
+    }
 }
-*/
-//#endregion
 
-export var RequireEngine: any = function (innerEngine) {
-    this.allowTemplateRewriting = false;
-    this.innerEngine = innerEngine || new RequireEngine.defaults.engine();
-};
+export const defaultInstance = new RequireEngine(new ko.nativeTemplateEngine());
 
-RequireEngine.defaults = {};
-RequireEngine.defaults.loading = "<div class='template-loading'></div>";
-RequireEngine.defaults.engine = ko.nativeTemplateEngine;
-
-RequireEngine.prototype = new ko.templateEngine();
-RequireEngine.prototype.addTemplate = function (key: string, template: string): void {
-    if (!RequireSource.isRequireTemplateSource(key)) {
-        return;
-    }
-
-    define(key, [], () => template);
-};
-RequireEngine.prototype.makeTemplateSource = function (template: any, templateDocument: any, options?: any): any {
-    // Require template
-    if (typeof template === "string" && RequireSource.isRequireTemplateSource(template)) {
-        return new ko.templateSources.require(template, options);
-    }
-
-    //Call base method
-    return this.innerEngine.makeTemplateSource.call(this.innerEngine, template, templateDocument);
-};
-RequireEngine.prototype.renderTemplateSource = function (templateSource: any, bindingContext: KnockoutBindingContext, options?: any): any {
-    return this.innerEngine.renderTemplateSource.apply(this.innerEngine, arguments);
-};
-RequireEngine.prototype.renderTemplate = function (template: any, bindingContext: KnockoutBindingContext, options: any, templateDocument: any): any {
-    var templateSource = this.makeTemplateSource(template, templateDocument, options);
-    return this.renderTemplateSource(templateSource, bindingContext, options);
-};
-
-export var defaultInstance = new RequireEngine(new ko.nativeTemplateEngine());
-
-export function setTemplateEngine(innerEngine?: KnockoutTemplateEngine): void {
+export function setTemplateEngine<T extends ko.templateEngine>(innerEngine?: T): void {
     ko.setTemplateEngine(new RequireEngine(innerEngine));
 }
 
-ko.requireTemplateEngine = RequireEngine;
+// ko.requireTemplateEngine = RequireEngine;
 
 //#endregion
