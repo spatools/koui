@@ -1,19 +1,33 @@
-/// <reference path="../_definitions.d.ts" />
 /// <amd-dependency path="jqueryui" />
 
-import ko = require("knockout");
-import $ = require("jquery");
-import utils = require("koutils/utils");
-import engine = require("./engine");
+import * as ko from "knockout";
+import * as $ from "jquery";
 
-export var defaults = {
+import utils = require("koutils/utils");
+
+import {
+    defaultInstance as templateEngine
+} from "./engine";
+
+export const defaults = {
     cssClass: "ui-context",
     width: 190
 };
 
 export interface IMenuContainer {
-    cssClass: KnockoutObservable<string>;
+    cssClass: ko.Observable<string>;
 }
+
+declare module "knockout" {
+    export interface BindingHandlers {
+        contextmenu: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+        subcontextmenu: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+    }
+} 
 
 //#region Context Menu
 
@@ -22,24 +36,24 @@ export interface ContextMenuConfiguration {
     cssClass?: any;
     width?: any;
     zIndex?: any;
-    items: any;
+    items: any[];
     hasHandle?: any;
     handleCssClass?: any;
 }
 
 export class ContextMenu implements IMenuContainer {
     private container: IMenuContainer;
-    public engine = engine.defaultInstance;
+    public engine = templateEngine;
 
-    public name: KnockoutObservable<string>;
-    public cssClass: KnockoutObservable<string>;
-    public width: KnockoutObservable<number>;
-    public zIndex: KnockoutObservable<number>;
+    public name: ko.Observable<string>;
+    public cssClass: ko.Observable<string>;
+    public width: ko.Observable<number>;
+    public zIndex: ko.Observable<number>;
 
-    public hasHandle: KnockoutObservable<boolean>;
-    public handleCssClass: KnockoutObservable<string>;
+    public hasHandle: ko.Observable<boolean>;
+    public handleCssClass: ko.Observable<string>;
 
-    public items: KnockoutObservableArray<ContextMenuItem> = ko.observableArray<ContextMenuItem>();
+    public items: ko.ObservableArray<ContextMenuItem> = ko.observableArray<ContextMenuItem>();
 
     constructor(data: ContextMenuConfiguration, container?: IMenuContainer) {
         this.container = container;
@@ -51,10 +65,9 @@ export class ContextMenu implements IMenuContainer {
 
         this.hasHandle = utils.createObservable(data.hasHandle, false);
         this.handleCssClass = utils.createObservable<string>(data.handleCssClass);
-
-        data.items.forEach(item => {
-            this.items.push(new ContextMenuItem(item, this));
-        });
+        
+        const items = data.items.map(item => new ContextMenuItem(item, this));
+        this.items(items);
     }
 }
 
@@ -75,11 +88,11 @@ export class ContextMenuItem {
     private subMenu: ContextMenu;
     private dataItem: any = {};
 
-    public text: KnockoutObservable<string>;
-    public iconCssClass: KnockoutObservable<string>;
-    public width: KnockoutObservable<number>;
-    public separator: KnockoutObservable<boolean>;
-    public disabled: KnockoutObservable<boolean>;
+    public text: ko.Observable<string>;
+    public iconCssClass: ko.Observable<string>;
+    public width: ko.Observable<number>;
+    public separator: ko.Observable<boolean>;
+    public disabled: ko.Observable<boolean>;
 
     public run: (dataItem?: any) => any;
 
@@ -104,8 +117,8 @@ export class ContextMenuItem {
     public addDataItem(dataItem: any) {
         this.dataItem = dataItem;
         if (this.hasChildren()) {
-            for (var i = 0; i < this.subMenu.items().length; i += 1) {
-                this.subMenu.items()[i].addDataItem(dataItem);
+            for (let item of this.subMenu.items()) {
+                item.addDataItem(dataItem);
             }
         }
     }
@@ -145,13 +158,13 @@ export interface ContextMenuBuilderResult {
 }
 
 export class ContextMenuBuilder implements IMenuContainer {
-    public cssClass: KnockoutObservable<string>;
+    public cssClass: ko.Observable<string>;
     public build: (e: Event, parentVM: any) => ContextMenuBuilderResult;
 
-    public hasHandle: KnockoutObservable<boolean>;
-    public handleCssClass: KnockoutObservable<string>;
+    public hasHandle: ko.Observable<boolean>;
+    public handleCssClass: ko.Observable<string>;
 
-    public contextMenus: KnockoutObservableArray<ContextMenu> = ko.observableArray<ContextMenu>();
+    public contextMenus: ko.ObservableArray<ContextMenu> = ko.observableArray<ContextMenu>();
 
     constructor(configuration: ContextMenuBuilderConfiguration) {
         this.cssClass = utils.createObservable(configuration.cssClass, defaults.cssClass);
@@ -160,9 +173,8 @@ export class ContextMenuBuilder implements IMenuContainer {
         this.hasHandle = utils.createObservable(configuration.hasHandle, false);
         this.handleCssClass = utils.createObservable<string>(configuration.handleCssClass);
 
-        configuration.contextMenus.forEach(menu => {
-            this.contextMenus.push(new ContextMenu(menu, this));
-        });
+        const contexts = configuration.contextMenus.map(menu => new ContextMenu(menu, this));
+        this.contextMenus(contexts);
     }
 }
 
@@ -189,16 +201,38 @@ function getMaxZIndex($element: JQuery): number {
 }
 
 ko.bindingHandlers.contextmenu = {
-    init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
-        var $element = $(element),
-            menuContainer: JQuery, config: ContextMenuBuilderResult, menu: ContextMenu,
-            parentVM = viewModel, value = ko.unwrap(valueAccessor());
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
+        const 
+            $element = $(element),
+            parentVM = viewModel, 
+            value = ko.unwrap(valueAccessor());
 
         if (!value) {
             return;
         }
 
-        var onContextMenu = function (e: JQueryEventObject) {
+        if (ko.unwrap(value.hasHandle)) {
+            const $handle = $("<div>")
+                    .addClass("ui-context-handle")
+                    .on("click", onContextMenu)
+                    .appendTo($element);
+
+            if (value.handleCssClass) {
+                $handle.addClass(ko.unwrap(value.handleCssClass));
+            }
+        }
+
+        $element
+            .addClass("nocontext")
+            .on("contextmenu", onContextMenu);
+
+        $("html").click(onDocumentClick);
+        
+        function onContextMenu(e: JQueryEventObject) {
+            let menuContainer: JQuery, 
+                config: ContextMenuBuilderResult, 
+                menu: ContextMenu;
+                
             if (value instanceof ContextMenuBuilder) {
                 config = value.build(e, parentVM);
                 menu = value.contextMenus.find(x => x.name() === config.name);
@@ -212,9 +246,9 @@ ko.bindingHandlers.contextmenu = {
             $(".ui-context").remove();
 
             if (menu !== undefined) {
-                menuContainer = $("<div></div>").appendTo("body");
+                menuContainer = $("<div>").appendTo("body");
 
-                menu.items().forEach((item: ContextMenuItem) => {
+                menu.items().forEach(item => {
                     item.disabled(!!config.disable && config.disable.indexOf(item.text()) !== -1); // disable item if necessary
                     item.addDataItem(parentVM); // assign the data item
                 });
@@ -223,40 +257,25 @@ ko.bindingHandlers.contextmenu = {
                 if (!menu.zIndex())
                     menu.zIndex(getMaxZIndex($element));
 
-                var afterRender = function (doms) {
-                    $(doms).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
-                };
-
-                ko.renderTemplate("text!koui/contextmenu/container.html", menu, { afterRender: afterRender, templateEngine: engine.defaultInstance }, menuContainer.get(0), "replaceNode");
+                ko.renderTemplate("text!koui/contextmenu/container.html", menu, { afterRender, templateEngine }, menuContainer.get(0), "replaceNode");
+                
             }
 
             return false;
-        };
-
-        if (ko.unwrap(value.hasHandle)) {
-
-            var $handle = $("<div>")
-                .addClass("ui-context-handle")
-                .on("click", onContextMenu)
-                .appendTo($element);
-
-            if (value.handleCssClass) {
-                $handle.addClass(ko.unwrap(value.handleCssClass));
+                
+            function afterRender(nodes: Node[]) {
+                $(nodes).filter(".ui-context").position({ my: "left top", at: "left bottom", of: e, collision: "flip" });
             }
         }
-
-        $element
-            .addClass("nocontext")
-            .on("contextmenu", onContextMenu);
-
-        $("html").click(function () {
+        
+        function onDocumentClick() {
             $(".ui-context").remove();
-        });
+        }
     }
 };
 
 ko.bindingHandlers.subcontextmenu = {
-    init: function (element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any): void {
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element: JQuery = $(element),
             value: boolean = ko.unwrap(valueAccessor()),
             width: number = ko.unwrap(viewModel.width()),
