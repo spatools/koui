@@ -1,13 +1,19 @@
-/// <reference path="../_definitions.d.ts" />
 /// <amd-dependency path="tinymce-theme" />
 
-import ko = require("knockout");
-import $ = require("jquery");
-import utils = require("koutils/utils");
+import * as ko from "knockout";
+import * as $ from "jquery";
+import * as tinymce from "tinymce";
 
-import tinymce = require("tinymce");
+declare module "knockout" {
+    export interface BindingHandlers {
+        tinymce: {
+            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+            update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+        };
+    }
+} 
 
-var defaults = {
+const defaults = {
     "browser_spellcheck": false,
     "toolbar": "undo redo | fontselect fontsizeselect | bold italic underline | bullist numlist | alignleft aligncenter alignright alignjustify",
     "skin": false,
@@ -17,13 +23,13 @@ var defaults = {
 
 ko.bindingHandlers.tinymce = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-        var value = valueAccessor(),
+        const $element = $(element);
+        let value = valueAccessor(),
             options = ko.unwrap(value),
-            $element = $(element),
             id = $element.attr("id"),
             oldSetup, editor;
 
-        if (utils.isObject(options)) {
+        if (typeof options === "object") {
             value = options.value;
             delete options.value;
         }
@@ -39,9 +45,8 @@ ko.bindingHandlers.tinymce = {
         ko.utils.extend(options, defaults);
 
         oldSetup = options.setup;
-        options.setup = function (editor) {
+        options.setup = (editor) => {
             oldSetup && oldSetup.call(undefined);
-
         };
 
         if ($element.is("textarea"))
@@ -57,7 +62,7 @@ ko.bindingHandlers.tinymce = {
         });
 
         // To prevent a memory leak, ensure that the underlying element"s disposal destroys it"s associated editor.
-        ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+        ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
             if (editor) {
                 editor.remove();
                 editor = null;
@@ -67,12 +72,13 @@ ko.bindingHandlers.tinymce = {
         editor.render();
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-        var val = ko.unwrap(valueAccessor()),
+        const
             $element = $(element),
             editor = tinymce.get($element.attr("id")),
             content = editor.getContent();
 
-        if (utils.isObject(val)) {
+        let val = ko.unwrap(valueAccessor());
+        if (typeof val === "object") {
             val = ko.unwrap(val.value);
         }
 
