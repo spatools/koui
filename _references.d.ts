@@ -1,8 +1,4 @@
-﻿/// <reference path="typings/knockout/knockout.d.ts" />
-/// <reference path="typings/jquery/jquery.d.ts" />
-/// <reference path="typings/jqueryui/jqueryui.d.ts" />
-/// <reference path="bower_components/koutils/dist/koutils.d.ts" />
-/// <reference path="src/base.d.ts" />
+﻿/// <reference path="typings/browser.d.ts" />
 
 interface Document {
     createEventObject(): Event;

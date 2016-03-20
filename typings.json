@@ -1,0 +1,12 @@
+{
+  "name": "koui",
+  "version": false,
+  "dependencies": {
+    "knockout": "registry:npm/knockout#3.4.0+20160315225509"
+  },
+  "ambientDependencies": {
+    "jquery": "registry:dt/jquery#1.10.0+20160316155526",
+    "jqueryui": "registry:dt/jqueryui#1.9.0+20160317120654",
+    "requirejs": "registry:env/requirejs#2.2.0+20160319062041"
+  }
+}
