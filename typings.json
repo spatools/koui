@@ -2,7 +2,7 @@
   "name": "koui",
   "version": false,
   "peerDependencies": {
-    "knockout": "github:typed-contrib/knockout#c7b3db08d952bf20cc60b03f297752fe6a93facd"
+    "knockout": "github:typed-contrib/knockout#ab9fa902fe05214177142b9b253936cf9d591b1d"
   },
   "ambientDependencies": {
     "jquery": "registry:dt/jquery#1.10.0+20160316155526",

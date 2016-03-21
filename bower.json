@@ -29,15 +29,14 @@
     "test"
   ],
   "dependencies": {
-    "koutils": "^1.0.10",
+    "knockout": "^3.4.0",
     "jquery": ">=1.9.0",
-    "requirejs-text": "^2.0.14"
+    "requirejs": "^2.2.0",
+    "text": "^2.0.14"
   },
   "devDependencies": {
-    "mocha": "~1.17.1",
-    "should": "3.1.2",
-    "sinon": "http://sinonjs.org/releases/sinon-1.8.1.js",
     "require-css": "~0.1.2",
-    "jquery-ui": "~1.10.4"
+    "jquery-ui": "~1.10.4",
+    "tinymce": "^4.3.8"
   }
 }

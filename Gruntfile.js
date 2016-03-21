@@ -46,7 +46,7 @@ module.exports = function (grunt) {
             }
         },
         samples: {
-            src: "<%= paths.samples %>/**/*.ts",
+            src: ["_references.d.ts", "<%= paths.samples %>/**/*.ts"],
             options: {
                 sourceMap: true
             }
@@ -157,6 +157,7 @@ module.exports = function (grunt) {
         test: {
             options: {
                 port: "8080",
+                hostname: "localhost",
                 livereload: 12321
             }
         }

@@ -21,7 +21,7 @@ test/helpers/*.js.map
 nuget/*.nupkg
 
 # Build results
-
+[Dd]ist/
 [Dd]ebug/
 [Rr]elease/
 x64/

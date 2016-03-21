@@ -105,7 +105,7 @@ export class RequireSource {
         if (arguments.length === 0) {
             const markup = this.text(); // to register dependency
             if (!this.template.data.__NODES__) {
-                this.template.data.__NODES__ = utils.unsafe(() => [parseMarkup(markup)]);
+                this.template.data.__NODES__ = utils.unsafe(() => parseMarkup(markup));
             }
 
             return this.template.data.__NODES__;
