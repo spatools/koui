@@ -1,8 +1,8 @@
 {
   "name": "koui",
   "version": false,
-  "dependencies": {
-    "knockout": "registry:npm/knockout#3.4.0+20160315225509"
+  "peerDependencies": {
+    "knockout": "github:typed-contrib/knockout#c7b3db08d952bf20cc60b03f297752fe6a93facd"
   },
   "ambientDependencies": {
     "jquery": "registry:dt/jquery#1.10.0+20160316155526",

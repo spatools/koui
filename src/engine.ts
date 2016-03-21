@@ -25,7 +25,7 @@ export interface RequireTemplateObservable extends ko.Observable<string> {
     data: any;
 }
 
-export interface RequireSourceOptions extends ko.TemplateOptions {
+export interface RequireSourceOptions extends ko.TemplateOptions<any> {
     loadingTemplate?: string;
 }
 
@@ -99,9 +99,9 @@ export class RequireSource {
         this.template.data[key] = value;
     }
 
-    public nodes(): Node[];
-    public nodes(element: Node[]): void;
-    public nodes(element?: Node[]): any {
+    public nodes(): Node | Node[];
+    public nodes(element: Node | Node[]): void;
+    public nodes(element?: Node | Node[]): any {
         if (arguments.length === 0) {
             const markup = this.text(); // to register dependency
             if (!this.template.data.__NODES__) {

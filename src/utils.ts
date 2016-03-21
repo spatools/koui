@@ -11,6 +11,8 @@ export interface Size {
     height: number;
 }
 
+export type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
+
 //#region Knockout Utilities
 
 /** Create value accessor for custom bindings. */
@@ -46,6 +48,18 @@ export function createObservableArray(value: any, mapFunction?: (obj: any) => an
     }
 
     return ko.observableArray(value);
+}
+
+export function maybeObservable<T>(value: MaybeSubscribable<T>, _default?: T): MaybeSubscribable<T> {
+    if (typeof value === "undefined" || value === null) {
+        return _default;
+    }
+    
+    if (ko.isSubscribable(value)) {
+        return value;
+    }
+
+    return value;
 }
 
 //#endregion
