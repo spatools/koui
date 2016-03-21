@@ -278,5 +278,5 @@ module.exports = function (grunt) {
     grunt.registerTask("nuget", ["nugetpack", "nugetpush"]);
     grunt.registerTask("publish", ["build", "nuget", "buildcontrol:dist", "npm-publish"]);
 
-    grunt.registerTask("default", ["test", "build"]);
+    grunt.registerTask("default", ["build"]);
 };
