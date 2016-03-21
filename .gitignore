@@ -8,20 +8,17 @@
 *.sln
 *.csproj
 
-# Keep only ts file in src folder
-src/*.js
-src/*.js.map
-samples/*.js
-samples/*.js.map
-test/*.js
-test/*.js.map
-test/helpers/*.d.ts
-test/helpers/*.js
-test/helpers/*.js.map
-nuget/*.nupkg
+# Generated files
+*.css
+*.js
+*.js.map
+*.d.ts
+!_references.d.ts
+!Gruntfile.js
 
 # Build results
 [Dd]ist/
+[Cc]ss/
 [Dd]ebug/
 [Rr]elease/
 x64/

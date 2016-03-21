@@ -82,7 +82,7 @@ module.exports = function (grunt) {
     //#region Assets
 
     config.less = {
-        dist: {
+        dev: {
             files: [
                 {
                     expand: true,
@@ -92,7 +92,18 @@ module.exports = function (grunt) {
                     ext: ".css"
                 }
             ]
-        }
+        },
+        dist: {
+            files: [
+                {
+                    expand: true,
+                    cwd: "<%= paths.less %>/",
+                    src: ["*.less", "!variables.less", "!mixins.less"],
+                    dest: "<%= paths.build %>/<%= paths.css %>/",
+                    ext: ".css"
+                }
+            ]
+        },
     };
 
     config.copy = {
@@ -142,7 +153,10 @@ module.exports = function (grunt) {
     config.clean = {
         dist: "<%= paths.build %>",
         temp: "<%= paths.temp %>",
-        dev: "<%= paths.src %>/**/*.{js,js.map,d.ts}",
+        dev: [
+            "<%= paths.css %>/**/*.css",
+            "<%= paths.src %>/**/*.{js,js.map,d.ts}",
+        ],
         samples: [
             "<%= clean.dev %>",
             "<%= paths.samples %>/**/*.{d.ts,js,js.map}"
@@ -181,7 +195,7 @@ module.exports = function (grunt) {
         tsdev: { files: ["<%= ts.dev.src %>"], tasks: ["newer:ts:dev"] },
         tssamples: { files: ["<%= ts.samples.src %>"], tasks: ["newer:ts:samples"] },
         
-        less: { files: ["<%= paths.less %>/**/*.less"], tasks: ["newer:less:dist"] },
+        less: { files: ["<%= paths.less %>/**/*.less"], tasks: ["newer:less:dev"] },
 
         livereload: {
             options: {
@@ -271,10 +285,10 @@ module.exports = function (grunt) {
     
     grunt.initConfig(config);
 
-    grunt.registerTask("dev", ["clean:dev", "ts:dev", "eslint:dev"]);
+    grunt.registerTask("dev", ["clean:dev", "ts:dev", "eslint:dev", "less:dev"]);
     grunt.registerTask("build", ["clean:dist", "ts:dist", "eslint:dist", "copy:dist", "less:dist", "assets"]);
     
-    grunt.registerTask("samples", ["clean:samples", "ts:samples", "eslint:samples", "connect:test", "watch"]);
+    grunt.registerTask("samples", ["clean:samples", "ts:samples", "eslint:samples", "less:dev", "connect:test", "watch"]);
     
     grunt.registerTask("nuget", ["nugetpack", "nugetpush"]);
     grunt.registerTask("publish", ["build", "nuget", "buildcontrol:dist", "npm-publish"]);
