@@ -62,6 +62,17 @@ export function maybeObservable<T>(value: MaybeSubscribable<T>, _default?: T): M
     return value;
 }
 
+export function setMaybeObservable<T>(obj: Object, prop: string, newValue: T): void {
+    const value = obj[prop];
+    
+    if (ko.isSubscribable(value)) {
+        value(newValue);
+    }
+    else {
+        obj[prop] = newValue;
+    }
+}
+
 //#endregion
 
 /** Execute callback methods in a safe DOM modification environment. Usefull when creating HTML5 Application. */

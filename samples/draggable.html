@@ -1,0 +1,46 @@
+<style>
+    .rect { 
+        position: absolute; 
+        width: 300px; 
+        height: 300px;
+        text-align: center;
+        line-height: 2em;
+        cursor: move;
+    }
+    
+    .rect h3 { padding-top: 70px; }
+    
+    .locked { opacity: .5; }
+    .locked:after {
+        display: block;
+        margin-top: 10px;
+        content: "locked!";
+    }
+    
+    #rect1 { background: #f00 }    
+    #rect2 { background: #0f0 }    
+    #rect3 { background: #00f }    
+</style>
+
+<h2>Draggable Sample</h2>
+<p>Drag Rectangles to see details</p>
+
+<!--ko with: options1-->
+<div id="rect1" class="rect" data-bind="draggable: $data, style: { top: top() + 'px', left: left() + 'px' }">
+    <h3>Simple</h3>
+    <em>X: <span data-bind="text: left"></span> Y: <span data-bind="text: top"></span></em>
+</div>
+<!--/ko-->
+<!--ko with: options2-->
+<div id="rect2" class="rect"  data-bind="draggable: $data, style: { top: top() + 'px', left: left() + 'px' }, css: { locked: !isEnabled() }, event: { dblclick: $root.toggleLock }">
+    <h3>Lockable</h3>
+    <em>double click to lock/unlock</em><br />
+    <em>X: <span data-bind="text: left"></span> Y: <span data-bind="text: top"></span></em>
+</div>
+<!--/ko-->
+<!--ko with: options3-->
+<div id="rect3" class="rect"  data-bind="draggable: $data, style: { top: top() + 'px', left: left() + 'px' }">
+    <h3>Locked</h3>
+    <em>X: <span data-bind="text: left"></span> Y: <span data-bind="text: top"></span></em>
+</div>
+<!--/ko-->

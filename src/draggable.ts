@@ -7,59 +7,12 @@ const
     $doc = $(doc),
     pointerEnabled = window.navigator.msPointerEnabled || window.navigator.pointerEnabled;
 
-declare module "knockout" {
-    export interface BindingHandlers {
-        draggable: {
-            init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
-            update(element: Node, valueAccessor: () => any): void;
-        };
-    }
-}
-
-//#region Private Methods
-
-function round(nb: number): number {
-    return Math.round(nb * 100) / 100;
-}
-
-function getMousePosition(event: JQueryEventObject, container: JQuery): utils.Point {
-    const offset = container.offset();
-
-    if ((<any>event.originalEvent).touches) {
-        event = (<any>event.originalEvent).touches[0];
-    }
-    else if (pointerEnabled && (<any>event.originalEvent).pointerId) {
-        event = (<any>event.originalEvent);
-    }
-
-    return {
-        x: (event.pageX - offset.left),
-        y: (event.pageY - offset.top)
-    };
-}
-
-function getElementPoint(event: JQueryEventObject, $element: JQuery, container: JQuery): utils.Point {
-    const
-        $data = $element.data("ko-draggable"),
-        point = getMousePosition(event, container),
-        result = { x: point.x - $data.vector.x, y: point.y - $data.vector.y };
-
-    if (result.x < 0) result.x = 0;
-    if (result.y < 0) result.y = 0;
-
-    if (result.x + $element.width() > container.width()) result.x = container.width() - $element.width();
-    if (result.y + $element.height() > container.height()) result.y = container.height() - $element.height();
-
-    return result;
-}
-
-//#endregion
-
 //#region Model
 
 export interface DraggableOptions {
-    isEnabled?: any;
-    container: any;
+    container?: ko.MaybeSubscribable<string>;
+    isEnabled?: ko.MaybeSubscribable<boolean>;
+    
     left: ko.Observable<number>;
     top: ko.Observable<number>;
 
@@ -68,10 +21,11 @@ export interface DraggableOptions {
 }
 
 export class Draggable {
+    private isInitialized = false;
     private $element: JQuery;
     private container: JQuery;
 
-    public isEnabled: ko.Observable<boolean>;
+    public isEnabled: ko.MaybeSubscribable<boolean>;
     public left: ko.Observable<number>;
     public top: ko.Observable<number>;
 
@@ -80,41 +34,48 @@ export class Draggable {
 
     constructor(options: DraggableOptions, element: HTMLElement, public viewModel: any) {
         this.$element = $(element);
-        this.container = this.$element.parents(ko.unwrap(options.container));
-        this.isEnabled = utils.createObservable(options.isEnabled, false);
+        
+        const ctnr = ko.unwrap(options.container);
+        this.container = ctnr ? this.$element.parents(ko.unwrap(options.container)) : $(window);
+        
+        this.isEnabled = utils.maybeObservable(options.isEnabled, true);
 
         this.left = options.left;
         this.top = options.top;
         this.dragStart = options.dragStart;
         this.dragEnd = options.dragEnd;
-
-        this.isEnabled.subscribe(this.isEnabledChanged, this);
-        this.isEnabled() && this.enable();
-
+        
         utils.bindAll(this, "onMouseDown", "onMouseMove", "onMouseUp");
+        
+        const isEnabled = this.isEnabled;
+        if (ko.isSubscribable(isEnabled)) {
+            isEnabled.subscribe(this.isEnabledChanged, this);
+        }
+        
+        if (ko.unwrap(isEnabled)) {
+            this.enable();
+        }
+
+        this.isInitialized = true;
     }
 
     public enable(): void {
-        if (!this.isEnabled()) {
-            this.$element.data("ko-draggable", { isMouseDown: false, lastPoint: { x: 0, y: 0 } });
-            this.$element.on("mousedown touchstart pointerdown", this.onMouseDown);
+        this.$element.data("ko-draggable", { isMouseDown: false, lastPoint: { x: 0, y: 0 } });
+        this.$element.on("mousedown touchstart pointerdown", this.onMouseDown);
 
-            if (pointerEnabled)
-                this.$element.css({ "touch-action": "none", "-ms-touch-action": "none" });
+        if (pointerEnabled)
+            this.$element.css({ "touch-action": "none", "-ms-touch-action": "none" });
 
-            this.isEnabled(true);
-        }
+        utils.setMaybeObservable(this, "isEnabled", true);
     }
     public disable(): void {
-        if (this.isEnabled()) {
-            this.$element.data("ko-draggable", { isMouseDown: false, lastPoint: { x: 0, y: 0 } });
-            this.$element.off("mousedown touchstart pointerdown", this.onMouseDown);
+        this.$element.data("ko-draggable", { isMouseDown: false, lastPoint: { x: 0, y: 0 } });
+        this.$element.off("mousedown touchstart pointerdown", this.onMouseDown);
 
-            if (pointerEnabled)
-                this.$element.css({ "touch-action": "", "-ms-touch-action": "" });
+        if (pointerEnabled)
+            this.$element.css({ "touch-action": "", "-ms-touch-action": "" });
 
-            this.isEnabled(false);
-        }
+        utils.setMaybeObservable(this, "isEnabled", false);
     }
 
     private isEnabledChanged(enabled: boolean): void {
@@ -175,12 +136,21 @@ export class Draggable {
 
 //#region Handler
 
+declare module "knockout" {
+    export interface BindingHandlers {
+        draggable: {
+            init(element: HTMLElement, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any): void;
+            update(element: HTMLElement, valueAccessor: () => any): void;
+        };
+    }
+}
+
 ko.bindingHandlers.draggable = {
     init: function(element, valueAccessor, allBindingsAccessor, viewModel): void {
         const data = ko.unwrap(valueAccessor());
 
         if (!(data instanceof Draggable)) {
-            element["_draggable"] = new Draggable(data, element as HTMLElement, viewModel);
+            element["_draggable"] = new Draggable(data, element, viewModel);
         }
     },
     update: function(element, valueAccessor): void {
@@ -192,14 +162,50 @@ ko.bindingHandlers.draggable = {
             const isEnabled = $(element).data("dragIsEnabled");
 
             if (data.isEnabled !== isEnabled) {
-                ko.ignoreDependencies(() => {
-                    data.isEnabled ? draggable.enable() : draggable.disable();
-                });
-                
+                data.isEnabled ? draggable.enable() : draggable.disable();
                 $(element).data("dragIsEnabled", data.isEnabled);
             }
         }
     }
 };
+
+//#endregion
+
+//#region Private Methods
+
+function round(nb: number): number {
+    return Math.round(nb * 100) / 100;
+}
+
+function getMousePosition(event: JQueryEventObject, container: JQuery): utils.Point {
+    const offset = container.offset() || { left: 0, top: 0 };
+
+    if ((<any>event.originalEvent).touches) {
+        event = (<any>event.originalEvent).touches[0];
+    }
+    else if (pointerEnabled && (<any>event.originalEvent).pointerId) {
+        event = (<any>event.originalEvent);
+    }
+
+    return {
+        x: (event.pageX - offset.left),
+        y: (event.pageY - offset.top)
+    };
+}
+
+function getElementPoint(event: JQueryEventObject, $element: JQuery, container: JQuery): utils.Point {
+    const
+        $data = $element.data("ko-draggable"),
+        point = getMousePosition(event, container),
+        result = { x: point.x - $data.vector.x, y: point.y - $data.vector.y };
+
+    if (result.x < 0) result.x = 0;
+    if (result.y < 0) result.y = 0;
+
+    if (result.x + $element.width() > container.width()) result.x = container.width() - $element.width();
+    if (result.y + $element.height() > container.height()) result.y = container.height() - $element.height();
+
+    return result;
+}
 
 //#endregion
