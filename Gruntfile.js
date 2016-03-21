@@ -1,21 +1,16 @@
-﻿'use strict';
+﻿"use strict";
 
 module.exports = function (grunt) {
-    // Load grunt tasks automatically
+    require("time-grunt")(grunt);
     require("jit-grunt")(grunt, {
+        buildcontrol: "grunt-build-control",
         nugetpack: "grunt-nuget",
         nugetpush: "grunt-nuget"
     });
-    require('time-grunt')(grunt); // Time how long tasks take. Can help when optimizing build times
 
-    var options = {
-        dev: grunt.option('dev')
-    };
-
-    // Define the configuration for all the tasks
-    grunt.initConfig({
-
+    var config = {
         pkg: grunt.file.readJSON("package.json"),
+        
         paths: {
             src: 'src',
             build: 'dist',
@@ -25,206 +20,263 @@ module.exports = function (grunt) {
             temp: '.temp',
             test: 'test'
         },
-
-        typescript: {
+        
+        options: {
+            dev: grunt.option("dev")
+        }
+    };
+    
+    //#region Typescript
+    
+    config.ts = {
+        options: {
+            target: "es5",
+            module: "amd",
+            declaration: false,
+            sourceMap: true,
+            comments: true,
+            disallowbool: true,
+            disallowimportmodule: true,
+            fast: "never"
+        },
+        dev: {
+            src: ["_references.d.ts", "<%= paths.src %>/**/*.ts"],
             options: {
-                target: "es3",
-                module: "amd",
-                sourceMap: false,
-                declaration: false,
-                comments: false,
-                disallowbool: true,
-                disallowimportmodule: true
-            },
-            dev: {
-                src: "<%= paths.src %>/**/*.ts",
-                options: {
-                    sourceMap: true
-                }
-            },
-            samples: {
-                src: "<%= paths.samples %>/**/*.ts",
-                options: {
-                    sourceMap: true
-                }
-            },
-            test: {
-                src: "<%= paths.test %>/**/*.ts"
-            },
-            declaration: {
-                src: "<%= paths.src %>/**/*.ts",
-                dest: "<%= paths.temp %>/",
-                options: {
-                    rootDir: '<%= paths.src %>',
-                    declaration: true
-                }
-            },
-            dist: {
-                src: "<%= paths.src %>/**/*.ts",
-                dest: "<%= paths.build %>/",
-                options: {
-                    rootDir: '<%= paths.src %>'
-                }
+                sourceMap: true
             }
         },
-
-        less: {
-            dist: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: '<%= paths.less %>/',
-                        src: ['*.less', '!variables.less', '!mixins.less'],
-                        dest: '<%= paths.css %>/',
-                        ext: '.css'
-                    }
-                ]
-            }
-        },
-
-        concat: {
-            declaration: {
-                src: [
-                    "<%= paths.src %>/base.d.ts",
-                    "<%= paths.temp %>/temp.d.ts"
-                ],
-                dest: "<%= paths.build %>/koui.d.ts"
-            }
-        },
-
-        copy: {
-            dist: {
-                expand: true,
-                cwd: "<%= paths.src %>/",
-                src: "**/*.html",
-                dest: "<%= paths.build %>/"
-            }
-        },
-
-        tsdamdconcat: {
+        samples: {
+            src: "<%= paths.samples %>/**/*.ts",
             options: {
-                removeReferences: true,
-                basePath: "<%= paths.temp %>",
-                prefixPath: "koutils"
-            },
-            declaration: {
-                src: "<%= paths.temp %>/*.d.ts",
-                dest: "<%= paths.temp %>/temp.d.ts"
+                sourceMap: true
             }
         },
-
-        jshint: {
+        dist: {
+            src: "<%= ts.dev.src %>",
+            dest: "<%= paths.build %>/",
             options: {
-                jshintrc: "jshint.json",
-            },
-
-            base: ["*.js"],
-            dev: ["<%= paths.src %>/**/*.js"],
-            samples: ["<%= paths.samples %>/**/*.js"],
-            dist: ["<%= paths.build %>/**/*.js"],
-            test: ["<%= paths.test %>/**/*.js"]
-        },
-
-        tslint: {
-            options: {
-                configuration: grunt.file.readJSON("tslint.json")
-            },
-            dev: {
-                src: "<%= paths.src %>/**/*.ts"
-            },
-            samples: {
-                src: "<%= paths.samples %>/**/*.ts"
-            },
-            test: {
-                src: "<%= paths.test %>/**/*.ts"
-            }
-        },
-
-        connect: {
-            test: {
-                options: {
-                    port: "8080",
-                    livereload: 12321
-                }
-            }
-        },
-
-        mocha: {
-            test: ["<%= paths.test %>/index.html"]
-        },
-
-        clean: {
-            dev: [
-                "<%= paths.src %>/**/*.{d.ts,js,js.map}",
-                "!<%= paths.src %>/base.d.ts"
-            ],
-            samples: ["<%= paths.samples %>/**/*.{d.ts,js,js.map}"],
-            test: ["<%= paths.test %>/**/*.{d.ts,js,js.map}"],
-            temp: ["<%= paths.temp %>/**/*.*"]
-        },
-
-        nugetpack: {
-            all: {
-                src: "nuget/*.nuspec",
-                dest: "nuget/",
-
-                options: {
-                    version: "<%= pkg.version %>"
-                }
-            }
-        },
-        nugetpush: {
-            all: {
-                src: "nuget/*.<%= pkg.version %>.nupkg"
-            }
-        },
-
-        watch: {
-            tslintdev: { files: ['<%= tslint.dev.src %>'], tasks: ['tslint:dev'] },
-            tslintsamples: { files: ['<%= tslint.samples.src %>'], tasks: ['samples:test'] },
-            tslinttest: { files: ['<%= tslint.test.src %>'], tasks: ['tslint:test'] },
-
-            jshintdev: { files: ['<%= jshint.dev %>'], tasks: ['jshint:dev'] },
-            jshintsamples: { files: ['<%= jshint.samples %>'], tasks: ['jshint:samples'] },
-            jshinttest: { files: ['<%= jshint.test %>'], tasks: ['jshint:test'] },
-
-            dev: { files: ['<%= typescript.dev.src %>'], tasks: ['typescript:dev'] },
-            samples: { files: ['<%= typescript.samples.src %>'], tasks: ['typescript:samples'] },
-            test: { files: ['<%= typescript.test.src %>'], tasks: ['typescript:test'] },
-
-            less: { files: ['<%= paths.less %>/**/*.less'], tasks: ['less:dist'] },
-
-            gruntfile: { files: ['Gruntfile.js'] },
-
-            livereload: {
-                options: {
-                    livereload: "<%= connect.test.options.livereload %>"
-                },
-                files: [
-                    "<%= paths.src %>/**/*.{js,js.map,html}",
-                    "<%= paths.samples %>/**/*.{js,js.map,html}",
-                    "<%= paths.test %>/**/*.{js,js.map,html}",
-                    "<%= paths.css %>/*.css"
-                ]
+                rootDir: "<%= paths.src %>",
+                declaration: true,
+                sourceMap: false
             }
         }
+    };
+
+    config.eslint = {
+        options: {
+            configFile: "eslint.json",
+        },
+
+        base: ["*.js"],
+        dev: ["<%= paths.src %>/**/*.js"],
+        samples: ["<%= paths.samples %>/**/*.js"],
+        dist: ["<%= paths.build %>/**/*.js"],
+        test: ["<%= paths.test %>/**/*.js"],
+        all: {
+            src: ["<%= eslint.dev %>", "<%= eslint.test %>"]
+        }
+    };
+    
+    //#endregion
+
+    //#region Assets
+
+    config.less = {
+        dist: {
+            files: [
+                {
+                    expand: true,
+                    cwd: '<%= paths.less %>/',
+                    src: ['*.less', '!variables.less', '!mixins.less'],
+                    dest: '<%= paths.css %>/',
+                    ext: '.css'
+                }
+            ]
+        }
+    };
+
+    config.copy = {
+        dist: {
+            files: [
+                {
+                    expand: true,
+                    cwd: "<%= paths.src %>/",
+                    src: "**/*.html",
+                    dest: "<%= paths.build %>/"
+                },
+                {
+                    src: "README.md",
+                    dest: "<%= paths.build %>/README.md"
+                }
+            ]
+        }
+    };
+
+    grunt.registerTask("assets", function () {
+        copyPackage("package.json");
+        copyPackage("bower.json");
+
+        writeDest(".gitignore", "node_modules/\nbower_components/");
     });
+    
+    function copyPackage(src) {
+        var pkg = grunt.file.readJSON(src),
+            dest = config.paths.build + "/" + dest;
+        
+        delete pkg.scripts;
+        delete pkg.devDependencies;
+        
+        writeDest(src, JSON.stringify(pkg, null, 2));
+    }
+    
+    function writeDest(name, content) {
+        var dest = config.paths.build + "/" + name;
+        grunt.file.write(dest, content);
+        grunt.log.ok(dest + " created !");
+    }
+    
+    //#endregion
+    
+    //#region Clean
 
-    grunt.registerTask("fixdecla", function () {
-        var content = grunt.file.read("dist/koui.d.ts");
-        content = content.replace(/\.{2}\/typings/g, "../../../typings");
-        grunt.file.write("dist/koui.d.ts", content);
+    config.clean = {
+        dist: "<%= paths.build %>",
+        temp: "<%= paths.temp %>",
+        dev: "<%= paths.src %>/**/*.{js,js.map,d.ts}",
+        samples: [
+            "<%= clean.dev %>",
+            "<%= paths.samples %>/**/*.{d.ts,js,js.map}"
+        ]
+    };
+
+    //#endregion
+    
+    //#region Watch
+
+    config.connect = {
+        test: {
+            options: {
+                port: "8080",
+                livereload: 12321
+            }
+        }
+    };
+
+    config.newer = {
+        options: {
+            override: function (detail, include) {
+                if (detail.task === "ts" && detail.path.indexOf(".d.ts") !== -1) {
+                    return include(true);
+                }
+                
+                include(false);
+            }
+        }
+    };
+
+    config.watch = {
+        eslintdev: { files: ['<%= eslint.dev %>'], tasks: ['eslint:dev'] },
+        eslintsamples: { files: ['<%= eslint.samples %>'], tasks: ['eslint:samples'] },
+
+        tsdev: { files: ['<%= ts.dev.src %>'], tasks: ['ts:dev'] },
+        tssamples: { files: ['<%= ts.samples.src %>'], tasks: ['ts:samples'] },
+
+        livereload: {
+            options: {
+                livereload: "<%= connect.test.options.livereload %>"
+            },
+            files: [
+                "<%= paths.src %>/**/*.{js,js.map,html}",
+                "<%= paths.samples %>/**/*.{js,js.map,html}",
+                "<%= paths.test %>/**/*.{js,js.map,html}",
+                "<%= paths.css %>/*.css"
+            ]
+        },
+
+        gruntfile: {
+            files: ["Gruntfile.js"],
+            options: { reload: true }
+        }
+    };
+    
+    //#endregion
+    
+    //#region Publish
+    
+    config.nugetpack = {
+        all: {
+            src: "nuget/*.nuspec",
+            dest: "nuget/",
+
+            options: {
+                version: "<%= pkg.version %>"
+            }
+        }
+    };
+    
+    config.nugetpush = {
+        all: {
+            src: "nuget/*.<%= pkg.version %>.nupkg"
+        }
+    };
+    
+    config.buildcontrol = {
+        options: {
+            commit: true,
+            push: true,
+            tag: "<%= pkg.version %>",
+            remote: "<%= pkg.repository.url %>",
+            branch: "release"
+        },
+        
+        dist: {
+            options: {
+                dir: "<%= paths.build %>",
+                message: "Release v<%= pkg.version %>"
+            }
+        }
+    };
+    
+    grunt.registerTask("npm-publish", function () {
+        var done = this.async();
+        
+        grunt.util.spawn(
+            {
+                cmd: "npm",
+                args: ["publish"],
+                opts: {
+                    cwd: config.paths.build
+                }
+            }, 
+            function(err, result, code) {
+                if (err) {
+                    grunt.log.error();
+                    grunt.fail.warn(err, code);
+                }
+                
+                if (code !== 0) {
+                    grunt.fail.warn(result.stderr || result.stdout, code);
+                }
+                
+                grunt.verbose.writeln(result.stdout);
+                grunt.log.ok("NPM package " + config.pkg.version + " successfully published");
+                
+                done();
+            }
+        );
     });
+    
+    //#endregion
+    
+    grunt.initConfig(config);
 
-    grunt.registerTask("dev", ["tslint:dev", "typescript:dev", "jshint:dev"]);
-    grunt.registerTask("build", ["tslint:dev", "typescript:dist", "jshint:dist", "copy:dist", "less:dist", "declaration"]);
-    grunt.registerTask("declaration", ["typescript:declaration", "tsdamdconcat:declaration", "concat:declaration", "clean:temp", "fixdecla"]);
-
-    grunt.registerTask("test", ["dev", "tslint:test", "typescript:test", "jshint:test", "mocha:test", "clean"]);
-    grunt.registerTask("btest", ["dev", "tslint:test", "typescript:test", "jshint:test", "connect:test", "watch"]);
-    grunt.registerTask("samples", ["dev", "tslint:samples", "typescript:samples", "jshint:samples", "connect:test", "watch"]);
-
+    grunt.registerTask("dev", ["clean:dev", "ts:dev", "eslint:dev"]);
+    grunt.registerTask("build", ["clean:dist", "ts:dist", "eslint:dist", "copy:dist", "less:dist", "assets"]);
+    
+    grunt.registerTask("samples", ["clean:samples", "ts:samples", "eslint:samples", "connect:test", "watch"]);
+    
     grunt.registerTask("nuget", ["nugetpack", "nugetpush"]);
+    grunt.registerTask("publish", ["build", "nuget", "buildcontrol:dist", "npm-publish"]);
 
-    grunt.registerTask("default", ["clean", "test", "build"]);
+    grunt.registerTask("default", ["test", "build"]);
 };

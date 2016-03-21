@@ -82,7 +82,7 @@ export class RequireSource {
             return this.template();
         }
         else {
-            this.template(arguments[0]);
+            this.template(value);
         }
     }
 
@@ -111,7 +111,7 @@ export class RequireSource {
             return this.template.data.__NODES__;
         }
         else {
-            this.template.data.__NODES__ = arguments[0];
+            this.template.data.__NODES__ = element;
         }
     }
 

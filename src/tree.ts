@@ -1,3 +1,4 @@
+/*eslint no-console: [0], no-unused-vars: [2, { args: "none" }] */
 /// <amd-dependency path="jqueryui" />
 
 import * as ko from "knockout";
@@ -83,7 +84,7 @@ export interface TreeContainer {
 }
 
 export class Tree implements TreeContainer {
-    public engine = templateEngine;
+    public engine: ko.templateEngine = templateEngine;
     public defaults: TreeDefaults = {};
     public handlers: TreeHandlers = {
         selectNode: function (node: TreeNode, onSuccess: () => void ): void {
@@ -174,7 +175,7 @@ export class Tree implements TreeContainer {
         var level = root || this,
             children = level.children(),
             i = 0, len = children.length,
-            node: TreeNode, result: TreeNode;
+            node: TreeNode;
 
         for (; i < len; i++) {
             node = children[i];
@@ -250,7 +251,7 @@ export class Tree implements TreeContainer {
     }
 
     public recalculateSizes(): void {
-        var maxNodeWidth = 0, widestNode;
+        var maxNodeWidth = 0;
         $(".node:visible", this.tree).each(function (ind1, node) {
             var newWidth = 0, $this = $(node);
             newWidth = newWidth + $this.children("label").outerWidth(true);
@@ -259,7 +260,6 @@ export class Tree implements TreeContainer {
 
             if (maxNodeWidth < newWidth) {
                 maxNodeWidth = newWidth;
-                widestNode = $this;
             }
         });
         $(".node", this.tree).css("minWidth", maxNodeWidth + 5);
@@ -385,8 +385,7 @@ export class TreeNode implements TreeContainer {
         this.isDropTarget = ko.pureComputed(() => typeValueOrDefault<boolean>("isDropTarget", this.type(), this.viewModel));
         this.connectToSortable = ko.pureComputed(() => typeValueOrDefault<string>("connectToSortable", this.type(), this.viewModel));
         this.isDraggable = ko.pureComputed(() => {
-            var name = this.name(),
-                childRenaming = this.children().some(child => child.isRenaming()),
+            var childRenaming = this.children().some(child => child.isRenaming()),
                 typeDefault = <boolean>typeValueOrDefault("isDraggable", this.type(), this.viewModel);
 
             return !this.isRenaming() && !childRenaming && typeDefault;

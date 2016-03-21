@@ -118,7 +118,7 @@ export class Slider {
         var pos = this.getRelativePosition(e.pageX, e.pageY);
         this.position(pos.x);
     }
-    public onMouseUp(e: MouseEvent): void {
+    public onMouseUp(): void {
         this.isMouseDown = false;
     }
 
@@ -137,7 +137,7 @@ export class Slider {
 }
 
 ko.bindingHandlers.slider = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init: function (element, valueAccessor) {
         let slider: Slider = ko.unwrap(valueAccessor());
 
         if (!(slider instanceof Slider))
@@ -147,14 +147,14 @@ ko.bindingHandlers.slider = {
 
         return { controlsDescendantBindings: true };
     },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    update: function (element, valueAccessor) {
         const slider = (element["_slider"] || ko.unwrap(valueAccessor())) as Slider;
         ko.renderTemplate("text!koui/slider/container.html", slider, { templateEngine, afterRender: slider.afterRender }, element);
     }
 };
 
 ko.bindingHandlers.sliderEvents = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
         $(element)
             .on("mousedown touchstart", viewModel.onMouseDown)
             .on("mousemove touchmove", viewModel.onMouseMove)

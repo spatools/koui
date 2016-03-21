@@ -104,7 +104,7 @@ export class Ribbon {
             pages = this.pages(),
             i = 0, page = pages[i];
 
-        while (!!page) {
+        while (page) {
             if (page === selected)
                 isSelected = true;
 
@@ -532,7 +532,7 @@ ko.bindingHandlers.popOut = {
 };
 
 ko.bindingHandlers.ribbon = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init: function (element, valueAccessor) {
         element["_ribbon"] = Ribbon.create(ko.unwrap(valueAccessor()));
         
         $(element).addClass("ribbon");
@@ -565,10 +565,8 @@ ko.bindingHandlers.ribbon = {
 };
 
 ko.bindingHandlers.ribbonPage = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            page = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-page");
 
@@ -592,10 +590,8 @@ ko.bindingHandlers.ribbonPage = {
 };
 
 ko.bindingHandlers.ribbonGroup = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            group = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-group");
         $("<h3>").attr("data-bind", "text: title").appendTo($container);
@@ -610,10 +606,8 @@ ko.bindingHandlers.ribbonGroup = {
 };
 
 ko.bindingHandlers.ribbonList = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            list = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-list");
 
@@ -627,10 +621,8 @@ ko.bindingHandlers.ribbonList = {
 };
 
 ko.bindingHandlers.ribbonForm = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            form = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-form");
         
@@ -644,10 +636,8 @@ ko.bindingHandlers.ribbonForm = {
 };
 
 ko.bindingHandlers.ribbonFlyout = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            flyout = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-flyout").addClass("ribbon-button");
 
@@ -689,10 +679,8 @@ ko.bindingHandlers.ribbonItem = {
 };
 
 ko.bindingHandlers.ribbonButton = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            button = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-button");
 
@@ -707,10 +695,8 @@ ko.bindingHandlers.ribbonButton = {
 };
 
 ko.bindingHandlers.ribbonCheckbox = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            checkbox = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-checkbox");
 
@@ -724,7 +710,7 @@ ko.bindingHandlers.ribbonCheckbox = {
 };
 
 ko.bindingHandlers.ribbonInput = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init: function (element, valueAccessor) {
         const
             input = ko.unwrap(valueAccessor()),
             label = ko.unwrap(input.label),
@@ -806,17 +792,12 @@ ko.bindingHandlers.ribbonInput = {
 };
 
 ko.bindingHandlers.ribbonSlider = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            slider = ko.unwrap(valueAccessor()),
-            $container = $("<div>");
+    init: function (element) {
+        const $container = $("<div>");
 
         $(element).addClass("ribbon-slider");
 
-        if (slider.label || slider.icon) {
-            $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, classes: icon").appendTo($container);
-        }
-
+        $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, classes: icon").appendTo($container);
         $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo($container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));

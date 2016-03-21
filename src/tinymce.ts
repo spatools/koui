@@ -22,7 +22,7 @@ const defaults = {
 };
 
 ko.bindingHandlers.tinymce = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+    init: function (element, valueAccessor) {
         const $element = $(element);
         let value = valueAccessor(),
             options = ko.unwrap(value),
@@ -46,7 +46,7 @@ ko.bindingHandlers.tinymce = {
 
         oldSetup = options.setup;
         options.setup = (editor) => {
-            oldSetup && oldSetup.call(undefined);
+            oldSetup && oldSetup.call(undefined, editor);
         };
 
         if ($element.is("textarea"))
@@ -57,7 +57,7 @@ ko.bindingHandlers.tinymce = {
         }
 
         editor = new tinymce.Editor(id, options, tinymce.EditorManager);
-        editor.on("change keyup nodechange", function (args) {
+        editor.on("change keyup nodechange", () => {
             if (ko.isWriteableObservable(value)) value(editor.getContent());
         });
 
@@ -71,7 +71,7 @@ ko.bindingHandlers.tinymce = {
 
         editor.render();
     },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+    update: function (element, valueAccessor) {
         const
             $element = $(element),
             editor = tinymce.get($element.attr("id")),

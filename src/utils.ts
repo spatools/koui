@@ -183,7 +183,7 @@ export function createCssHook(prop: string): void {
     var property = prefixStyle(prop);
     if (property && property !== prop) { // Set cssHooks only for browsers that support a vendor-prefixed property
         $.cssHooks[prop] = {
-            get: function (elem, computed, extra) {
+            get: function (elem) {
                 return $(elem).css(property);
             },
             set: function (elem, value) {

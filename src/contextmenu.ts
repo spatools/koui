@@ -42,7 +42,7 @@ export interface ContextMenuConfiguration {
 
 export class ContextMenu implements IMenuContainer {
     private container: IMenuContainer;
-    public engine = templateEngine;
+    public engine: ko.templateEngine = templateEngine;
 
     public name: ko.Observable<string>;
     public cssClass: ko.Observable<string>;
@@ -129,7 +129,7 @@ export class ContextMenuItem {
         return (this.width() - 41) + "px"; // icon + borders + padding
     }
 
-    public onClick(e: Event) {
+    public onClick() {
         if (this.disabled() || this.run === undefined) {
             return false;
         }
@@ -277,7 +277,6 @@ ko.bindingHandlers.subcontextmenu = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel): void {
         var $element: JQuery = $(element),
             value: boolean = ko.unwrap(valueAccessor()),
-            width: number = ko.unwrap(viewModel.width()),
             cssClass: string;
 
         if (value) {

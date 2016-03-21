@@ -22,16 +22,8 @@ function round(nb: number): number {
     return Math.round(nb * 100) / 100;
 }
 
-export function getCoefficient(container: JQuery): number {
-    //var transform = container.get(0).transform;
-    //return transform ? transform.getAttrs().scale[0] : 1;
-    return 1;
-}
-
 function getMousePosition(event: JQueryEventObject, container: JQuery): utils.Point {
-    const
-        offset = container.offset(),
-        coef = getCoefficient(container);
+    const offset = container.offset();
 
     if ((<any>event.originalEvent).touches) {
         event = (<any>event.originalEvent).touches[0];
@@ -41,8 +33,8 @@ function getMousePosition(event: JQueryEventObject, container: JQuery): utils.Po
     }
 
     return {
-        x: (event.pageX - offset.left) * (1 / coef),
-        y: (event.pageY - offset.top) * (1 / coef)
+        x: (event.pageX - offset.left),
+        y: (event.pageY - offset.top)
     };
 }
 
@@ -149,7 +141,7 @@ export class Draggable {
 
         return false;
     }
-    private onMouseUp(e: JQueryEventObject): void {
+    private onMouseUp(): void {
         var $data = this.$element.data("ko-draggable");
         $data.isMouseDown = false;
 
