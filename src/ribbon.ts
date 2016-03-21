@@ -479,6 +479,10 @@ declare module "knockout" {
         popOut: {
             update(element: HTMLElement, valueAccessor: () => any): void;
         };
+        ribbonclass: {
+            update(element: HTMLElement, valueAccessor: () => string): void;
+        };
+        
         ribbon: BindingHandler;
         ribbonPage: BindingHandler;
         ribbonGroup: BindingHandler;
@@ -531,6 +535,19 @@ ko.bindingHandlers.popOut = {
     }
 };
 
+const RIBBON_CLASSES_KEY = "__RIBBON_CLASSES_KEY__";
+ko.bindingHandlers.ribbonclass = {
+    update: function (element, valueAccessor): void {
+        const value = String(ko.unwrap(valueAccessor()) || "").trim();
+        
+        ko.utils.toggleDomNodeCssClass(element, element[RIBBON_CLASSES_KEY], false);
+        
+        element[RIBBON_CLASSES_KEY] = value;
+        
+        ko.utils.toggleDomNodeCssClass(element, value, true);
+    }
+};
+
 ko.bindingHandlers.ribbon = {
     init: function (element, valueAccessor) {
         element["_ribbon"] = Ribbon.create(ko.unwrap(valueAccessor()));
@@ -541,26 +558,26 @@ ko.bindingHandlers.ribbon = {
             ribbon = element["_ribbon"] as Ribbon,
             $container = $("<div>"),
 
-            $ribbon = $("<div>").addClass("ribbon-content").attr("data-bind", "css: { locked: isLocked, collapsed: isCollapsed }").appendTo($container),
-            backButton = $("<a>").addClass("back-button").attr("data-bind", "click: backButtonClick").appendTo($ribbon);
+            $ribbon = $("<div>").addClass("ribbon-content").attr("data-bind", "css: { 'ribbon-locked': isLocked, 'ribbon-collapsed': isCollapsed }").appendTo($container),
+            backButton = $("<a>").addClass("ribbon-back").attr("data-bind", "click: backButtonClick").appendTo($ribbon);
 
-        $("<span>").addClass("ribbon-icon").attr("data-bind", "classes: backButtonIcon").appendTo(backButton);
+        $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: backButtonIcon").appendTo(backButton);
 
         const
             $actions = $("<div>").addClass("ribbon-actions").appendTo($ribbon),
-            $expand = $("<span>").attr("data-bind", "if: !isLocked()").appendTo($actions);
+            $expand = $("<span>").attr("data-bind", "ifnot: isLocked").appendTo($actions);
 
-        $("<a>").addClass("expander").attr("data-bind", "click: expand, css: { expanded: !isCollapsed() }").appendTo($expand);
+        $("<a>").addClass("ribbon-expander").attr("data-bind", "click: expand, css: { 'ribbon-expander-expanded': !isCollapsed() }").appendTo($expand);
 
-        var pages = $("<ul>").addClass("ribbon-pages").attr("data-bind", "foreach: pages").appendTo($ribbon);
-        $("<li>").attr("data-bind", "ribbonPage: $data, css: { special: special, selected: $parent.selectedPage() == $data }").appendTo(pages);
+        var pages = $("<ul>").addClass("ribbon-page-container").attr("data-bind", "foreach: pages").appendTo($ribbon);
+        $("<li>").attr("data-bind", "ribbonPage: $data, css: { special: special, 'ribbon-page-selected': $parent.selectedPage() == $data }").appendTo(pages);
         ribbon.selectedPage(ko.unwrap(ribbon.pages)[0]);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
         return { controlsDescendantBindings: true };
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        renderTemplateUpdate(element, utils.createAccessor(element["_ribbon"]), allBindingsAccessor, viewModel, bindingContext);
+        renderTemplate(element, element["_ribbon"], bindingContext, "ribbon");
     }
 };
 
@@ -572,13 +589,13 @@ ko.bindingHandlers.ribbonPage = {
 
         $("<a>")
             .addClass("ribbon-page-header")
-            .attr("data-bind", "click: $root.selectPage, text: title")
+            .attr("data-bind", "click: ribbon.selectPage.bind(ribbon), text: title")
             .appendTo($container);
 
         const 
             $groups = $("<ul>")
-                .addClass("ribbon-groups")
-                .attr("data-bind", "template: { if: $root.selectedPage() == $data, foreach: groups }, css: { collapsed: $root.isCollapsed }, popOut: { visible: $parent.pop, enabled: $root.isCollapsed }")
+                .addClass("ribbon-group-container")
+                .attr("data-bind", "template: { if: ribbon.selectedPage() == $data, foreach: groups }, popOut: { visible: $parent.pop, enabled: ribbon.isCollapsed }")
                 .appendTo($container);
             
         $("<li>").attr("data-bind", "ribbonGroup: $data, visible: visible").appendTo($groups);
@@ -596,7 +613,7 @@ ko.bindingHandlers.ribbonGroup = {
         $(element).addClass("ribbon-group");
         $("<h3>").attr("data-bind", "text: title").appendTo($container);
 
-        const $items = $("<ul>").addClass("ribbon-content").attr("data-bind", "foreach: content").appendTo($container);
+        const $items = $("<ul>").addClass("ribbon-group-content").attr("data-bind", "foreach: content").appendTo($container);
         $("<li>").addClass("ribbon-group-item").attr("data-bind", "ribbonItem: $data").appendTo($items);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
@@ -626,7 +643,7 @@ ko.bindingHandlers.ribbonForm = {
 
         $(element).addClass("ribbon-form");
         
-        const $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline, foreach: items").appendTo($container);
+        const $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: items").appendTo($container);
         $("<li>").addClass("ribbon-form-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
@@ -642,7 +659,7 @@ ko.bindingHandlers.ribbonFlyout = {
         $(element).addClass("ribbon-flyout").addClass("ribbon-button");
 
         const $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "css: { selected: selected }").appendTo($container);
-        $("<span>").addClass("ribbon-icon").attr("data-bind", "classes: icon").appendTo($button);
+        $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($button);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($button);
         $("<span>").addClass("ribbon-flyout-arrow").appendTo($button);
 
@@ -684,8 +701,8 @@ ko.bindingHandlers.ribbonButton = {
 
         $(element).addClass("ribbon-button");
 
-        const $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }, classes: $data.class").appendTo($container);
-        $("<span>").addClass("ribbon-icon").attr("data-bind", "classes: icon").appendTo($bt);
+        const $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }, ribbonclass: $data.class").appendTo($container);
+        $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($bt);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($bt);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
@@ -729,7 +746,7 @@ ko.bindingHandlers.ribbonInput = {
         }
 
         if (label || icon)
-            $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, classes: icon").appendTo($container);
+            $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo($container);
 
         let $inputElement = null,
             inputBinding = "";
@@ -770,7 +787,7 @@ ko.bindingHandlers.ribbonInput = {
             inputBinding += ", valueUpdate: valueUpdate";
         }
 
-        inputBinding += ", css: $data.class, on: on";
+        inputBinding += ", ribbonclass: $data.class, on: on";
 
         $inputElement.attr("data-bind", inputBinding);
         $inputElement.appendTo($container);
@@ -787,7 +804,7 @@ ko.bindingHandlers.ribbonInput = {
             ko.bindingHandlers.css.update(element, utils.createAccessor(_class));
         }
         
-        renderTemplateUpdate(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext);
+        renderTemplate(element, input, bindingContext, "input");
     }
 };
 
@@ -797,7 +814,7 @@ ko.bindingHandlers.ribbonSlider = {
 
         $(element).addClass("ribbon-slider");
 
-        $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, classes: icon").appendTo($container);
+        $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo($container);
         $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo($container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
@@ -813,10 +830,11 @@ ko.bindingHandlers.ribbonSlider = {
 const TMPL_COMPUTED_DOM_DATA_KEY = "__KOUI_TEMPLATE_COMPUTED__";
 
 function renderTemplateUpdate(element: Node, valueAccessor: () => any, allBindingsAccessor: ko.AllBindingsAccessor, viewModel: any, bindingContext: ko.BindingContext<any>) {
-    const 
-        data = ko.unwrap(valueAccessor()),
-        templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(data), {}, element);
-    
+    renderTemplate(element, ko.unwrap(valueAccessor()), bindingContext);
+}
+
+function renderTemplate(element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string) {
+    const templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(data, dataAlias), {}, element);
     disposeOldComputedAndStoreNewOne(element, templateComputed);
 }
 

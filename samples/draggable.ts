@@ -1,6 +1,5 @@
-import "../src/draggable";
-
 import * as ko from "knockout";
+import "../src/draggable";
 
 export const options1 = {
     top: ko.observable(200),

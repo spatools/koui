@@ -12,13 +12,13 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON("package.json"),
         
         paths: {
-            src: 'src',
-            build: 'dist',
-            less: 'less',
-            samples: 'samples',
-            css: 'css',
-            temp: '.temp',
-            test: 'test'
+            src: "src",
+            build: "dist",
+            less: "less",
+            samples: "samples",
+            css: "css",
+            temp: ".temp",
+            test: "test"
         },
         
         options: {
@@ -86,10 +86,10 @@ module.exports = function (grunt) {
             files: [
                 {
                     expand: true,
-                    cwd: '<%= paths.less %>/',
-                    src: ['*.less', '!variables.less', '!mixins.less'],
-                    dest: '<%= paths.css %>/',
-                    ext: '.css'
+                    cwd: "<%= paths.less %>/",
+                    src: ["*.less", "!variables.less", "!mixins.less"],
+                    dest: "<%= paths.css %>/",
+                    ext: ".css"
                 }
             ]
         }
@@ -176,11 +176,12 @@ module.exports = function (grunt) {
     };
 
     config.watch = {
-        eslintdev: { files: ['<%= eslint.dev %>'], tasks: ['eslint:dev'] },
-        eslintsamples: { files: ['<%= eslint.samples %>'], tasks: ['eslint:samples'] },
+        eslint: { files: ["<%= eslint.all.src %>"], tasks: ["newer:eslint:all"] },
 
-        tsdev: { files: ['<%= ts.dev.src %>'], tasks: ['ts:dev'] },
-        tssamples: { files: ['<%= ts.samples.src %>'], tasks: ['ts:samples'] },
+        tsdev: { files: ["<%= ts.dev.src %>"], tasks: ["newer:ts:dev"] },
+        tssamples: { files: ["<%= ts.samples.src %>"], tasks: ["newer:ts:samples"] },
+        
+        less: { files: ["<%= paths.less %>/**/*.less"], tasks: ["newer:less:dist"] },
 
         livereload: {
             options: {
@@ -189,7 +190,6 @@ module.exports = function (grunt) {
             files: [
                 "<%= paths.src %>/**/*.{js,js.map,html}",
                 "<%= paths.samples %>/**/*.{js,js.map,html}",
-                "<%= paths.test %>/**/*.{js,js.map,html}",
                 "<%= paths.css %>/*.css"
             ]
         },

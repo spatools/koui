@@ -4,6 +4,7 @@
         "module": "amd"
     },
     "exclude": [
+        "dist",
         "typings/main"
     ]
 }
