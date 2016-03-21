@@ -476,8 +476,8 @@ export class RibbonSlider extends RibbonItem {
 
 declare module "knockout" {
     export interface BindingHandlers {
-        popOut: {
-            update(element: HTMLElement, valueAccessor: () => any): void;
+        ribbonpop: {
+            init(element: HTMLElement, valueAccessor: () => any): void;
         };
         ribbonclass: {
             update(element: HTMLElement, valueAccessor: () => string): void;
@@ -497,44 +497,6 @@ declare module "knockout" {
     }
 } 
 
-ko.bindingHandlers.popOut = {
-    update: function (element, valueAccessor): void {
-        const
-            options = ko.unwrap(valueAccessor()),
-            visible = ko.unwrap(options.visible),
-            enabled = ko.unwrap(options.enabled),
-            parent = $(element).parents("li:first");
-
-
-        if (enabled === true) {
-            if (visible === true) {
-                $(element).show();
-
-                setTimeout(function () {
-                    $(element).on("click.koPop", function (e) {
-                        e.stopPropagation();
-                        return false;
-                    });
-
-                    $("html").bind("click.koPop", function (e) {
-                        if ($(e.target).closest(parent.get(0)).length === 0) {
-                            options.visible(false);
-                        }
-                    });
-                }, 1);
-            }
-            else {
-                if ($(element).is(":visible")) { // TODO: corriger petite erreur
-                    $(element).hide();
-
-                    $("html").unbind("click.koPop");
-                    $(element).unbind("click.koPop");
-                }
-            }
-        }
-    }
-};
-
 const RIBBON_CLASSES_KEY = "__RIBBON_CLASSES_KEY__";
 ko.bindingHandlers.ribbonclass = {
     update: function (element, valueAccessor): void {
@@ -545,6 +507,46 @@ ko.bindingHandlers.ribbonclass = {
         element[RIBBON_CLASSES_KEY] = value;
         
         ko.utils.toggleDomNodeCssClass(element, value, true);
+    }
+};
+
+ko.bindingHandlers.ribbonpop = {
+    init: function(element, valueAccessor): void {
+        const 
+            $element = $(element),
+            options = ko.unwrap(valueAccessor()),
+            parent = $element.parents("li:first").get(0);
+        
+        ko.computed(() => {
+            if (!options.enabled()) {
+                $element.css("display", "");
+                clean();
+                return;
+            }
+            
+            if (options.visible()) {
+                $element.show();
+                $element.on("click.ribbonpagepop", stopEvent);
+                $("html").on("click.ribbonpagepop", onDocumentClick);
+            }
+            else {
+                $element.hide();
+                clean();
+            }
+        }, { disposeWhenNodeIsRemoved: element }).extend({ deferred: true });
+        
+        ko.utils.domNodeDisposal.addDisposeCallback(element, clean);
+    
+        function onDocumentClick(e: JQueryEventObject) {
+            if ($(e.target).closest(parent).length === 0) {
+                options.visible(false);
+            }
+        }
+        
+        function clean() {
+            $("html").off("click.ribbonpagepop");
+            $element.off("click.ribbonpagepop");
+        }
     }
 };
 
@@ -593,10 +595,15 @@ ko.bindingHandlers.ribbonPage = {
             .appendTo($container);
 
         const 
+            $content = $("<div>")
+                .addClass("ribbon-page-content")
+                .attr("data-bind", "if: ribbon.selectedPage() === $data, ribbonpop: { visible: $parent.pop, enabled: ribbon.isCollapsed }")
+                .appendTo($container),
+                
             $groups = $("<ul>")
                 .addClass("ribbon-group-container")
-                .attr("data-bind", "template: { if: ribbon.selectedPage() == $data, foreach: groups }, popOut: { visible: $parent.pop, enabled: ribbon.isCollapsed }")
-                .appendTo($container);
+                .attr("data-bind", "template: { foreach: groups, as: 'group' }")
+                .appendTo($content);
             
         $("<li>").attr("data-bind", "ribbonGroup: $data, visible: visible").appendTo($groups);
 
@@ -902,6 +909,11 @@ function flyoutAfterRender(nodes: any[]): void {
         $("html").off("click");
     }
     
+}
+
+function stopEvent(e: JQueryEventObject) {
+    e.stopPropagation();
+    return false;
 }
 
 //#endregion

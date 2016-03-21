@@ -148,8 +148,24 @@
         display: inline-block;
         
         &-container  {
+            display: block !important;
             height: 28px;
             padding-left: 80px !important;
+        }
+        
+        &-content {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 90px;
+            padding: 0 5px;
+            margin-top: -1px;
+            border: solid 1px @font-color;
+            border-width: 1px 0;
+            background: #F5F8FE;
+            display: none;
+            overflow: hidden;
+            z-index: 3;
         }
 
         a&-header {
@@ -169,8 +185,8 @@
                 background: #F5F8FE;
             }
 
-            .ribbon-group-container {
-                display: block !important;
+            .ribbon-page-content {
+                display: block;
             }
 
             &.special {
@@ -179,7 +195,7 @@
                     background: @accent-color-3;
                 }
 
-                .ribbon-group-container {
+                .ribbon-page-content {
                     background: @accent-color-3;
                     border-color: @accent-color;
                 }
@@ -197,17 +213,11 @@
         vertical-align: top;
         
         &-container {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 90px;
-            padding: 0 5px !important;
-            margin-top: -1px !important;
-            border: solid 1px @font-color;
-            border-width: 1px 0;
-            background: #F5F8FE;
-            display: none !important;
-            z-index: 3;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 60px;
+            margin-bottom: -60px;
+            max-width: 100%;
         }
 
         & > h3 {
@@ -359,7 +369,7 @@
             padding: 3px 5px;
             border: solid 1px #ddd;
             background: #fff;
-            z-index: 9;
+            z-index: 999;
             -webkit-box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);
             -moz-box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);
             box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);

@@ -259,16 +259,22 @@ export const ribbon = new Ribbon({
                     title: "Forms 1",
                     content: forms.createForms()
                 }, {
+                    title: "Buttons",
+                    content: buttons.createButtons(2)
+                }, {
                     title: "Forms 2",
                     content: forms.createForms()
+                }, {
+                    title: "Flyouts",
+                    content: flyouts.createFlyouts()
                 }, {
                     title: "Forms 3",
                     content: forms.createForms()
                 }, {
-                    title: "Forms 4",
-                    content: forms.createForms()
+                    title: "Lists",
+                    content: lists.createLists()
                 }, {
-                    title: "Forms 5",
+                    title: "Forms 4",
                     content: forms.createForms()
                 }
             ]
