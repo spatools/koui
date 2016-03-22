@@ -842,12 +842,14 @@ ko.bindingHandlers.ribbonButton = {
 
 ko.bindingHandlers.ribbonCheckbox = {
     init: function (element) {
-        const $container = $("<div>");
+        const 
+            $container = $("<div>"),
+            $label = $("<label>").addClass("ribbon-label").appendTo($container);
+
+        $("<span>").attr("data-bind", "text: label").appendTo($label);
+        $("<input>").attr("type", "checkbox").attr("data-bind", "checked: checked").appendTo($label);
 
         $(element).addClass("ribbon-checkbox");
-
-        $("<label>").attr("data-bind", "text: label").appendTo($container);
-        $("<input>").attr("type", "checkbox").attr("data-bind", "checked: checked").appendTo($container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
         return { controlsDescendantBindings: true };
@@ -863,7 +865,8 @@ ko.bindingHandlers.ribbonInput = {
             icon = ko.unwrap(input.icon),
             $container = $("<div>");
 
-        let 
+        let
+            $label: JQuery,
             type = ko.unwrap(input.type),
             color = false;
             
@@ -874,8 +877,10 @@ ko.bindingHandlers.ribbonInput = {
             type = "text";
         }
 
-        if (label || icon)
-            $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo($container);
+        if (label || icon) {
+            $label = $("<label>").addClass("ribbon-label").appendTo($container);
+            $("<span>").attr("data-bind", "text: label, ribbonclass: icon").appendTo($label);
+        }
 
         let $inputElement = null,
             inputBinding = "";
@@ -887,10 +892,8 @@ ko.bindingHandlers.ribbonInput = {
         else if (type === "select") {
             inputBinding = "value: value, options: options";
 
-            if (input.optionsText)
-                inputBinding += ", optionsText: optionsText";
-            if (input.optionsValue)
-                inputBinding += ", optionsValue: optionsValue";
+            if (input.optionsText) inputBinding += ", optionsText: optionsText";
+            if (input.optionsValue) inputBinding += ", optionsValue: optionsValue";
 
             $inputElement = $("<select>").addClass("ribbon-select");
         }
@@ -903,8 +906,11 @@ ko.bindingHandlers.ribbonInput = {
             else if (color) {
                 inputBinding = "colorpicker: value";
             }
-            else {
+            else if (input.valueUpdate) {
                 inputBinding = "value: value";
+            }
+            else {
+                inputBinding = "textInput: value";
             }
         }
 
@@ -919,7 +925,7 @@ ko.bindingHandlers.ribbonInput = {
         inputBinding += ", ribbonclass: $data.class, on: on";
 
         $inputElement.attr("data-bind", inputBinding);
-        $inputElement.appendTo($container);
+        $inputElement.appendTo(type === "checkbox" && $label ? $label : $container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
         return { controlsDescendantBindings: true };
