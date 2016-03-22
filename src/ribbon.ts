@@ -266,6 +266,11 @@ export interface RibbonFlyoutOptions {
 }
 
 export class RibbonFlyout extends RibbonItem {
+    private _context: ko.BindingContext<any>;
+    private _button: HTMLButtonElement;
+    private _virtual: Element;
+    private _host: HTMLElement;
+    
     title: MaybeSubscribable<string>;
     icon: MaybeSubscribable<string>;
     selected: MaybeSubscribable<boolean>;
@@ -278,6 +283,121 @@ export class RibbonFlyout extends RibbonItem {
         this.icon = utils.maybeObservable(options.icon, "icon-base");
         this.selected = utils.maybeObservable(options.selected, false);
         this.content = utils.createObservableArray(options.content, RibbonItem.create);
+        
+        utils.bindAll(this, "click", "position");
+    }
+    
+    public init(button: HTMLButtonElement, bindingContext: ko.BindingContext<any>): void {
+        this._button = button;
+        this._context = bindingContext.createChildContext(this, "flyout");
+        
+        const 
+            virtual = document.createElement("div"),
+            $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").appendTo(virtual);
+            
+        $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
+        
+        new ko.templateSources.anonymousTemplate(virtual).nodes(virtual);
+        
+        this._virtual = virtual;
+    }
+    
+    public click() {
+        this.show();
+        RibbonFlyout.registerDocument();
+    }
+    
+    private show() {
+        const 
+            $host = $("<div>")
+                .addClass("ribbon-content")
+                .addClass("ribbon-flyout-popup")
+                .css("opacity", "0")
+                .appendTo(document.body),
+            
+            host = $host.get(0);
+        
+        this._host = host;
+        
+        ko.renderTemplate(
+            this._virtual, 
+            this._context, 
+            { afterRender: this.position },
+            host
+        );
+    }
+    
+    private position() {
+        const
+            button = this._button,
+            host = this._host,
+            bbox = button.getBoundingClientRect(),
+            
+            doc = document.documentElement,
+            docWidth = doc.clientWidth;
+        
+        let x = bbox.left,
+            y = bbox.bottom,
+            r = (x + host.clientWidth);
+            
+        if (r > docWidth) {
+            x -= (r - docWidth);
+        }
+            
+        host.style.left = x + "px";
+        host.style.top = y + "px";
+        host.style.opacity = "1";
+    }
+    
+    static registerDocument(): void {
+        if (RibbonFlyout._isDocRegistered) {
+            return;
+        }
+        
+        document.addEventListener("click", RibbonFlyout._onDocumentClick, true);
+        RibbonFlyout._isDocRegistered = true;
+    }
+
+    private static _isDocRegistered = false;
+    private static _onDocumentClick(e: MouseEvent) {
+        const parents = RibbonFlyout.getAllHosts(e.target as Node);
+        
+        if (parents.length === 0) {
+            $(".ribbon-flyout-popup").remove();
+            
+            document.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
+            RibbonFlyout._isDocRegistered = false;
+            
+            return;
+        }
+        
+        $(".ribbon-flyout-popup").each((i, el: HTMLElement) => {
+            if (parents.indexOf(el) === -1) {
+                el.parentElement.removeChild(el);
+            }
+        });
+    }
+    
+    private static getFlyout(node: Node): RibbonFlyout {
+        const ctx = ko.contextFor(node);
+        return ctx && ctx["flyout"];
+    }
+    
+    private static getParentsHosts(flyout: RibbonFlyout): HTMLElement[] {
+        const 
+            ctx = ko.contextFor(flyout._button).$parentContext,
+            parent = ctx["flyout"] as RibbonFlyout;
+        
+        return parent ? 
+            [parent._host].concat(RibbonFlyout.getParentsHosts(parent)) :
+            [];
+    }
+    
+    private static getAllHosts(node: Node): HTMLElement[] {
+        const flyout = RibbonFlyout.getFlyout(node);
+        return flyout ? 
+            [flyout._host].concat(RibbonFlyout.getParentsHosts(flyout)) : 
+            [];
     }
 }
 
@@ -665,23 +785,25 @@ ko.bindingHandlers.ribbonFlyout = {
 
         $(element).addClass("ribbon-flyout").addClass("ribbon-button");
 
-        const $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "css: { selected: selected }").appendTo($container);
+        const $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "click: click, css: { selected: selected }").appendTo($container);
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($button);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($button);
         $("<span>").addClass("ribbon-flyout-arrow").appendTo($button);
 
-        const $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").hide().appendTo($container);
-        $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
+        // const $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").hide().appendTo($container);
+        // $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
         return { controlsDescendantBindings: true };
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const 
-            flyout = ko.unwrap(valueAccessor()),
-            templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(flyout), { afterRender: flyoutAfterRender }, element);
+        const flyout = ko.unwrap(valueAccessor()) as RibbonFlyout;
             
-        disposeOldComputedAndStoreNewOne(element, templateComputed);
+        renderTemplate(element, flyout, bindingContext, "flyout", { afterRender });
+
+        function afterRender(nodes: [HTMLButtonElement, HTMLElement]) {
+            flyout.init(nodes[0], bindingContext);
+        }
     }
 };
 
@@ -840,8 +962,8 @@ function renderTemplateUpdate(element: Node, valueAccessor: () => any, allBindin
     renderTemplate(element, ko.unwrap(valueAccessor()), bindingContext);
 }
 
-function renderTemplate(element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string) {
-    const templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(data, dataAlias), {}, element);
+function renderTemplate(element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>) {
+    const templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(data, dataAlias), options || {}, element);
     disposeOldComputedAndStoreNewOne(element, templateComputed);
 }
 
@@ -877,38 +999,6 @@ function getRibbonItemHandler(item: any): string {
     else if (item instanceof RibbonSlider) {
         return "ribbonSlider";
     }
-}
-
-function flyoutAfterRender(nodes: any[]): void {
-    const 
-        button = $(nodes[0]), 
-        ul = $(nodes[1]);
-        
-    button.on("click", onButtonClick);
-    ul.on("click", onListClick);
-    
-    function onButtonClick(e: JQueryEventObject) {
-        if (!ul.is(":visible")) {
-            $("html").on("click", onDocumentClick);
-
-            $(".ribbon-flyout-content").fadeOut();
-            ul.fadeIn();
-
-            e.stopPropagation();
-        }
-    }
-    
-    function onListClick(e: JQueryEventObject) {
-        const $target = $(e.target);
-        if (!$target.is("button") && $target.parents("button").length === 0) // si pas bouton empeche fermeture
-            event.stopPropagation();
-    }
-    
-    function onDocumentClick() {
-        ul.fadeOut();
-        $("html").off("click");
-    }
-    
 }
 
 function stopEvent(e: JQueryEventObject) {

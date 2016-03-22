@@ -207,15 +207,21 @@ export module flyouts {
         };
     }
     
-    export function createRecursiveFlyout() {
+    export function createRecursiveFlyout(recursive?: boolean) {
         return {
             __: "flyout",
             title: "Recursive",
             icon: "fa fa-recycle",
-            content: [
-                createButtonFlyout(),
-                createFormFlyout()
-            ]
+            content: recursive ?
+                [
+                    createButtonFlyout(),
+                    createFormFlyout(),
+                    createRecursiveFlyout()
+                ] :
+                [
+                    createButtonFlyout(),
+                    createFormFlyout()
+                ]
         };
     }
     
@@ -223,7 +229,7 @@ export module flyouts {
         return [
             createButtonFlyout(),
             createFormFlyout(),
-            createRecursiveFlyout()
+            createRecursiveFlyout(true)
         ];
     }
 }

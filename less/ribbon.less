@@ -11,75 +11,6 @@
     .no-select;
     height: @ribbon-size;
     z-index: 99;
-
-    a, button {
-        text-decoration: none;
-        cursor: pointer;
-        
-        &:focus {
-            outline-color: @accent-color;
-        }
-    }
-    
-    ul {
-        .reset-list;
-        display: inline-block;
-        vertical-align: top;
-        white-space: nowrap;
-    }
-
-    input, select, textarea {
-        margin: 0;
-        padding: 3px 5px;
-        border: solid 1px #ccc;
-        font-size: 0.8em;
-
-        &:focus {
-            outline-color: @accent-color;
-        }
-    }
-    
-    input {
-        width: 50px;
-        
-        &[type="checkbox"] {
-            float: left;
-            width: auto;
-            margin: 8px 8px 0 0;
-        }
-        
-        &[type="number"] {
-            text-align: right;
-            
-            &::-webkit-inner-spin-button,
-            &::-webkit-outer-spin-button {  
-                opacity: 1;
-                margin-left: 3px;
-            }
-        }
-    }
-
-    textarea {
-        margin-top: 5px;
-    }
-
-    label {
-        display: inline-block;
-        min-width: 16px;
-        margin-right: 5px;
-        font-size: 0.8em;
-        vertical-align: middle;
-        text-align: center;
-        
-        &:before {
-            font-size: 16px;
-        }
-    }
-
-    select {
-        padding: 2px 3px;
-        min-width: 102px;
-    }
     
     &-hidden {
         display: none !important;
@@ -90,6 +21,77 @@
 
         .ribbon-page-container {
             border-bottom: solid 1px @font-color;
+        }
+    }
+    
+    &-content {
+        a, button {
+            text-decoration: none;
+            cursor: pointer;
+            
+            &:focus {
+                outline-color: @accent-color;
+            }
+        }
+        
+        ul {
+            .reset-list;
+            display: inline-block;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+
+        input, select, textarea {
+            margin: 0;
+            padding: 3px 5px;
+            border: solid 1px #ccc;
+            font-size: 0.8em;
+
+            &:focus {
+                outline-color: @accent-color;
+            }
+        }
+        
+        input {
+            width: 50px;
+            
+            &[type="checkbox"] {
+                float: left;
+                width: auto;
+                margin: 8px 8px 0 0;
+            }
+            
+            &[type="number"] {
+                text-align: right;
+                
+                &::-webkit-inner-spin-button,
+                &::-webkit-outer-spin-button {  
+                    opacity: 1;
+                    margin-left: 3px;
+                }
+            }
+        }
+
+        textarea {
+            margin-top: 5px;
+        }
+
+        label {
+            display: inline-block;
+            min-width: 16px;
+            margin-right: 5px;
+            font-size: 0.8em;
+            vertical-align: middle;
+            text-align: center;
+            
+            &:before {
+                font-size: 16px;
+            }
+        }
+
+        select {
+            padding: 2px 3px;
+            min-width: 102px;
         }
     }
     
@@ -336,12 +338,12 @@
     }
     
     &-flyout {
-        button.ribbon-flyout-button {
-            span.ribbon-button-title {
+        &-button {
+            & > .ribbon-button-title {
                 padding-right: 10px;
             }
 
-            span.ribbon-flyout-arrow {
+            & > .ribbon-flyout-arrow {
                 position: absolute;
                 bottom: 2px;
                 right: 5px;
@@ -361,9 +363,9 @@
                 }
             }
         }
-
-        ul.ribbon-flyout-content {
-            position: absolute;
+        
+        &-popup {
+            position: fixed;
             overflow: hidden;
             display: block;
             padding: 3px 5px;
@@ -374,41 +376,48 @@
             -moz-box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);
             box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);
             white-space: nowrap;
-
-            li.ribbon-flyout-item {
-                display: inline-block;
-                margin: 2px 5px 2px 2px;
-                padding: 4px;
-                vertical-align: top;
             
-                .ribbon-long-text {
+            -ms-transition: opacity .3s ease-out;
+            -moz-transition: opacity .3s ease-out;
+            -webkit-transition: opacity .3s ease-out;
+            transition: opacity .3s ease-out;
+        }
+
+        &-content {
+            & > li:first-child {
+                margin-left: 5px !important;
+            }
+        }
+        
+        &-item {
+            display: inline-block;
+            margin: 2px 5px 2px 5px;
+            padding: 4px;
+            vertical-align: top;
+        
+            .ribbon-long-text {
+                display: inline-block;
+                width: auto;
+
+                input.ribbon-input-text {
                     display: inline-block;
-                    width: auto;
-
-                    input.ribbon-input-text {
-                        display: inline-block;
-                        width: 150px;
-                    }
-                }
-
-                li.ribbon-form-item {
-                    height: auto;
-
-                    .ribbon-label {
-                        display: inline-block;
-                        vertical-align: top;
-                        min-width: 100px;
-                    }
-
-                    .ribbon-textarea {
-                        width: 220px;
-                        height: 110px;
-                    }
+                    width: 150px;
                 }
             }
             
-            li.ribbon-form {
-                margin-left: 20px;
+            &.ribbon-form {
+                & > li.ribbon-form {
+                    margin-left: 20px;
+                }
+            }
+
+            li.ribbon-form-item {
+                height: auto;
+
+                .ribbon-textarea {
+                    width: 220px;
+                    height: 110px;
+                }
             }
         }
     }
