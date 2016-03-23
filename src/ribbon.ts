@@ -183,6 +183,8 @@ export interface RibbonGroupOptions {
     isCollapsed?: MaybeSubscribable<boolean>;
     visible?: MaybeSubscribable<boolean>;
     icon?: MaybeSubscribable<string>;
+    css?: MaybeSubscribable<string | Object>;
+    template?: MaybeSubscribable<string>;
     content?: any;
 }
 
@@ -192,6 +194,8 @@ export class RibbonGroup {
     isCollapsed: MaybeSubscribable<boolean>;
     visible: MaybeSubscribable<boolean>;
     icon: MaybeSubscribable<string>;
+    css: MaybeSubscribable<string | Object>;
+    template: MaybeSubscribable<string>;
     content: ko.ObservableArray<RibbonItem>;
 
     constructor(options: RibbonGroupOptions) {
@@ -200,6 +204,8 @@ export class RibbonGroup {
         this.isCollapsed = utils.maybeObservable(options.isCollapsed, false);
         this.visible = utils.maybeObservable(options.visible, true);
         this.icon = utils.maybeObservable(options.icon, "icon-base");
+        this.css = utils.maybeObservable(options.css);
+        this.template = utils.maybeObservable(options.template);
         this.content = utils.createObservableArray(options.content, RibbonItem.create);
     }
     
@@ -326,7 +332,7 @@ export class RibbonFlyout extends RibbonItem {
         this._context = bindingContext.createChildContext(this, "ribbonflyout");
         
         const 
-            virtual = doc.createElement("div"),
+            virtual = createRoot(),
             $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").appendTo(virtual);
             
         $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
@@ -702,7 +708,7 @@ ko.bindingHandlers.ribbonpop = {
 createTemplatedBindingHandler("ribbon", {
     create() {
         const
-            root = doc.createElement("div"),
+            root = createRoot(),
 
             $ribbon = $("<div>").addClass("ribbon-content").attr("data-bind", "css: { 'ribbon-locked': isLocked, 'ribbon-collapsed': isCollapsed }").appendTo(root),
             backButton = $("<a>").addClass("ribbon-back").attr("data-bind", "click: backButtonClick").appendTo($ribbon);
@@ -736,7 +742,7 @@ createTemplatedBindingHandler("ribbon", {
 
 createTemplatedBindingHandler("ribbonpage", {
     create() {
-        const root = doc.createElement("div");
+        const root = createRoot();
 
         $("<a>")
             .addClass("ribbon-page-header")
@@ -754,7 +760,7 @@ createTemplatedBindingHandler("ribbonpage", {
                 .attr("data-bind", "template: { foreach: groups, as: 'group' }")
                 .appendTo($content);
             
-        $("<li>").attr("data-bind", "ribbongroup: $data, visible: visible").appendTo($groups);
+        $("<li>").attr("data-bind", "visible: visible, css: css, ribbongroup: $data").appendTo($groups);
 
         return root;
     },
@@ -765,7 +771,7 @@ createTemplatedBindingHandler("ribbonpage", {
 
 createTemplatedBindingHandler("ribbongroup", {
     create() {
-        const root = doc.createElement("div");
+        const root = createRoot();
 
         $("<h3>").attr("data-bind", "text: title").appendTo(root);
 
@@ -802,7 +808,7 @@ ko.bindingHandlers.ribbonitem = {
 createTemplatedBindingHandler("ribbonlist", {
     create() {
         const 
-            root = doc.createElement("div"),
+            root = createRoot(),
             $ul = $("<ul>").addClass("ribbon-list-content").attr("data-bind", "foreach: { data: items, as: 'item' }").appendTo(root);
             
         $("<li>").addClass("ribbon-list-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
@@ -817,7 +823,7 @@ createTemplatedBindingHandler("ribbonlist", {
 createTemplatedBindingHandler("ribbonform", {
     create() {
         const 
-            root = doc.createElement("div"),
+            root = createRoot(),
             $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: { data: items, as: 'item' }").appendTo(root);
             
         $("<li>").addClass("ribbon-form-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
@@ -832,7 +838,7 @@ createTemplatedBindingHandler("ribbonform", {
 createTemplatedBindingHandler("ribbonflyout", {
     create() {
         const 
-            root = doc.createElement("div"),
+            root = createRoot(),
             $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "click: click, css: { selected: selected }").appendTo(root);
             
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($button);
@@ -858,7 +864,7 @@ createTemplatedBindingHandler("ribbonflyout", {
 createTemplatedBindingHandler("ribbonbutton", {
     create() {
         const 
-            root = doc.createElement("div"),
+            root = createRoot(),
             $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }").appendTo(root);
             
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($bt);
@@ -874,7 +880,7 @@ createTemplatedBindingHandler("ribbonbutton", {
 createTemplatedBindingHandler("ribboncheckbox", {
     create() {
         const 
-            root = doc.createElement("div"),
+            root = createRoot(),
             $label = $("<label>").addClass("ribbon-label").appendTo(root);
 
         $("<span>").attr("data-bind", "text: label").appendTo($label);
@@ -889,7 +895,7 @@ createTemplatedBindingHandler("ribboncheckbox", {
 
 createTemplatedBindingHandler("ribbonslider", {
     create() {
-        const root = doc.createElement("div");
+        const root = createRoot();
 
         $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo(root);
         $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo(root);
@@ -1085,6 +1091,10 @@ function getRibbonItemHandler(item: any): string {
 function stopEvent(e: JQueryEventObject) {
     e.stopPropagation();
     return false;
+}
+
+function createRoot() {
+    return doc.createElement("div");
 }
 
 //#endregion
