@@ -1,18 +1,28 @@
 ﻿import * as ko from "knockout";
 import * as $ from "jquery";
-import * as utils from "./utils";
-
 import {
-    defaultInstance as templateEngine
-} from "./engine";
+    Point,
+
+    bindAll,
+    createObservable,
+    maybeObservable,
+    
+    createTemplatedHandler,
+    renderTemplateCached,
+    
+    prefixStyle
+} from "./utils";
+
+type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
 
 declare module "knockout" {
     export interface BindingHandlers {
         slider: {
+            create(),
             init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
             update(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
         };
-        sliderEvents: {
+        sliderevents: {
             init(element: Node, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
         };
     }
@@ -35,9 +45,9 @@ export class Slider {
     private handleWidth: ko.Observable<number> = ko.observable(0);
 
     public value: ko.Observable<number>;
-    public min: ko.Observable<number>;
-    public max: ko.Observable<number>;
-    public step: ko.Observable<number>;
+    public min: MaybeSubscribable<number>;
+    public max: MaybeSubscribable<number>;
+    public step: MaybeSubscribable<number>;
     public coef: ko.Computed<number>;
     public position: ko.Computed<number>;
 
@@ -48,16 +58,16 @@ export class Slider {
         if (typeof options === "number" || ko.isSubscribable(options))
             options = { value: options };
 
-        this.value = utils.createObservable(options.value, 0);
-        this.min = utils.createObservable(options.min, 0);
-        this.max = utils.createObservable(options.max, 1);
-        this.step = utils.createObservable(options.step, 0.01);
+        this.value = createObservable(options.value, 0);
+        this.min = maybeObservable(options.min, 0);
+        this.max = maybeObservable(options.max, 1);
+        this.step = maybeObservable(options.step, 0.01);
 
         this.coef = ko.pureComputed<number>({
             read: function () {
                 const
-                    max = this.max(),
-                    min = this.min();
+                    max = ko.unwrap(this.max),
+                    min = ko.unwrap(this.min);
                     
                 let val = this.value();
 
@@ -68,38 +78,48 @@ export class Slider {
             },
             write: function (newCoef) {
                 const
-                    max = this.max(),
-                    min = this.min();
+                    max = ko.unwrap(this.max),
+                    min = ko.unwrap(this.min),
+                    step = ko.unwrap(this.step);
 
                 if (min !== 0 || max !== 1)
                     newCoef = ((max - min) * newCoef) + min;
 
-                this.value(getBestStep(newCoef, this.step()));
+                this.value(getBestStep(newCoef, step));
             },
             owner: this
         });
 
         this.position = ko.pureComputed<number>({
             read: function () {
-                var coef = this.coef();
+                const coef = this.coef();
+                    
                 this.updateWidths();
-                return Math.round((coef * this.elementWidth()) - (this.handleWidth() * coef));
+                
+                return Math.round((coef * this.elementWidth()) - (this.handleWidth() * coef) - 1);
             },
             write: function (pos) {
                 this.updateWidths();
-                this.coef(pos / this.elementWidth());
+                
+                const coef = pos / this.elementWidth();
+                this.coef(Math.max(Math.min(coef, 1), 0));
             },
             owner: this
         });
 
-        utils.bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
+        bindAll(this, "afterRender", "onMouseDown", "onMouseMove", "onMouseUp");
+    }
+    
+    public dispose(): void {
+        this.coef.dispose();
+        this.position.dispose();
+        this.element = this.$element = this.$handle = null;
     }
 
-    public init(element: Element): void {
-        this.element = element;
-        this.$element = $(element);
-    }
-    public afterRender(): void {
+    public afterRender([node]: [HTMLElement]): void {
+        this.element = node;
+        this.$element = $(node);
+        
         this.$handle = this.$element.find(".ui-slider-handle");
         this.updateWidths();
     }
@@ -107,8 +127,15 @@ export class Slider {
     public onMouseDown(e: MouseEvent): void {
         this.isMouseDown = true;
 
-        var pos = this.getRelativePosition(e.pageX, e.pageY);
+        const pos = this.getRelativePosition(e.pageX, e.pageY);
         this.position(pos.x);
+        
+        $(document.body).css(prefixStyle("userSelect"), "none");
+        
+        $(document).on({
+            "mousemove touchmove": this.onMouseMove,
+            "mouseup touchend touchcancel": this.onMouseUp
+        });
     }
     public onMouseMove(e: MouseEvent): void {
         if (!this.isMouseDown) {
@@ -120,13 +147,19 @@ export class Slider {
     }
     public onMouseUp(): void {
         this.isMouseDown = false;
+        
+        $(document.body).css(prefixStyle("userSelect"), "");
+        $(document).off({
+            "mousemove touchmove": this.onMouseMove,
+            "mouseup touchend touchcancel": this.onMouseUp
+        });
     }
 
     private updateWidths(): void {
         this.$element && this.elementWidth(this.$element.width());
         this.$handle && this.handleWidth(this.$handle.width());
     }
-    private getRelativePosition(x: number, y: number): utils.Point {
+    private getRelativePosition(x: number, y: number): Point {
         var offset = this.$element.offset();
 
         return {
@@ -136,29 +169,44 @@ export class Slider {
     }
 }
 
-ko.bindingHandlers.slider = {
-    init: function (element, valueAccessor) {
-        let slider: Slider = ko.unwrap(valueAccessor());
-
-        if (!(slider instanceof Slider))
-            slider = element["_slider"] = new Slider(slider);
-
-        slider.init(element as Element);
-
-        return { controlsDescendantBindings: true };
+createTemplatedHandler("slider", {
+    create() {
+        const 
+            root = document.createElement("div"),
+            
+            $slider = $("<div>").addClass("ui-slider").appendTo(root),
+            $bar = $("<div>").addClass("ui-slider-bar").appendTo($slider);
+            
+        $("<div>").addClass("ui-slider-handle").attr("data-bind", "style: { left: position() + 'px' }").appendTo($bar);
+        $("<div>").addClass("ui-slider-overlay").attr("data-bind", "sliderevents").appendTo($slider);
+        
+        return root;
     },
-    update: function (element, valueAccessor) {
+    init(element, valueAccessor) {
+        let slider: Slider = ko.unwrap(valueAccessor());
+        if (slider instanceof Slider) {
+            return;
+        }
+        
+        slider = element["_slider"] = new Slider(slider);
+        ko.utils.domNodeDisposal.addDisposeCallback(element, () => { slider.dispose(); });
+    },
+    update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         const slider = (element["_slider"] || ko.unwrap(valueAccessor())) as Slider;
-        ko.renderTemplate("text!koui/slider/container.html", slider, { templateEngine, afterRender: slider.afterRender }, element);
+        renderTemplateCached("slider", element, slider, bindingContext, "slider", { afterRender: slider.afterRender });
     }
-};
+});
 
-ko.bindingHandlers.sliderEvents = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+ko.bindingHandlers.sliderevents = {
+    init(element, valueAccessor, allBindingsAccessor, viewModel) {
         $(element)
-            .on("mousedown touchstart", viewModel.onMouseDown)
-            .on("mousemove touchmove", viewModel.onMouseMove)
-            .on("mouseup mouseout touchend touchcancel", viewModel.onMouseUp);
+            .on("mousedown touchstart", viewModel.onMouseDown);
+            
+        ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+            $(document)
+                .off("mousemove touchmove", viewModel.onMouseMove)
+                .off("mouseup touchend touchcancel", viewModel.onMouseUp);
+        });
     }
 };
 
@@ -166,10 +214,8 @@ function getBestStep(value: number, step: number): number {
     if (!step) {
         return value;
     }
-
-    var rest = value % step,
-        upper = rest >= step / 2;
-
-    return upper ? value + (step - rest) : value - rest;
+    
+    const invertedStep = 1 / step; // round issue
+    return Math.round(value * invertedStep) / invertedStep;
 }
 

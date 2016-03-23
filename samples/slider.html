@@ -1,0 +1,22 @@
+<style type="text/css">
+    .slider-sample, 
+    .slider-sample .ui-slider { width: 200px; }
+    
+    .slider-sample h5 { text-align: center }
+</style>
+
+<h2>Slider Sample</h2>
+
+<h3>Default</h3>
+<div class="slider-sample">
+    <label>(min: 0, max: 1, step 0.01)</label>
+    <div data-bind="slider: sliderDefault"></div>
+    <h5 data-bind="text: valueDefault"></h5>
+</divp>
+
+<h3>Configured</h3>
+<div class="slider-sample">
+    <label>(min: 0, max: 300, step 10)</label>
+    <div data-bind="slider: sliderConfigured"></div>
+    <h5 data-bind="text: valueConfigured"></h5>
+</div>
