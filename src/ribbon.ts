@@ -218,26 +218,29 @@ export class RibbonGroup {
 export interface RibbonItemOptions {
     __?: string;
     bindings?: Object;
-    class?: MaybeSubscribable<Object | string>;
+    class?: MaybeSubscribable<Object | string>; // Backward compatibility
     css?: MaybeSubscribable<Object | string>;
+    visible?: MaybeSubscribable<boolean>;
     template?: MaybeSubscribable<string | Node>;
 }
 
 export class RibbonItem {
     bindings: Object;
     css: MaybeSubscribable<Object | string>;
+    visible: MaybeSubscribable<boolean>;
     template: MaybeSubscribable<string | Node>;
     
     constructor(options: RibbonItemOptions) {
         this.bindings = options.bindings || {};
         this.css = utils.maybeObservable(options.css || options.class);
+        this.visible = utils.maybeObservable(options.visible, true);
         this.template = utils.maybeObservable(options.template);
     }
     
     public getBindingString(): string {
         let bindings = Object.keys(this.bindings);
             
-        return "css: css" +
+        return "css: css, visible: visible" +
             (bindings.length ? "," : "") +
             bindings.map(b => `${b}: ${b}`).join(",");
     }
@@ -438,7 +441,6 @@ export interface RibbonButtonOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
-    class?: MaybeSubscribable<string>;
     click?: () => any;
 }
 
@@ -446,7 +448,6 @@ export class RibbonButton extends RibbonItem {
     title: MaybeSubscribable<string>;
     icon: MaybeSubscribable<string>;
     selected: MaybeSubscribable<boolean>;
-    class: MaybeSubscribable<string>;
     click: () => any;
 
     constructor(options: RibbonButtonOptions) {
@@ -455,7 +456,6 @@ export class RibbonButton extends RibbonItem {
         this.title = utils.maybeObservable(options.title, "");
         this.icon = utils.maybeObservable(options.icon, "icon-base");
         this.selected = utils.maybeObservable(options.selected, false);
-        this.class = utils.maybeObservable(options.class);
         this.click = options.click || function () { return null; };
     }
 }
@@ -520,7 +520,7 @@ export interface RibbonInputOptions extends RibbonItemOptions {
     icon?: MaybeSubscribable<string>;
     type?: MaybeSubscribable<string>;
     value: MaybeSubscribable<any>;
-    class?: MaybeSubscribable<any>;
+    event?: MaybeSubscribable<Object>;
     on?: MaybeSubscribable<any>;
 
     options?: any;
@@ -536,7 +536,7 @@ export class RibbonInput extends RibbonItem {
     icon: MaybeSubscribable<string>;
     type: MaybeSubscribable<string>;
     value: MaybeSubscribable<any>;
-    class: MaybeSubscribable<any>;
+    event: MaybeSubscribable<Object>;
     on: MaybeSubscribable<any>;
 
     options: any;
@@ -553,7 +553,7 @@ export class RibbonInput extends RibbonItem {
         this.icon = utils.maybeObservable(options.icon, "");
         this.type = utils.maybeObservable(options.type, "text");
         this.value = utils.createObservable(options.value);
-        this.class = utils.maybeObservable(options.class);
+        this.event = utils.maybeObservable(options.event);
         this.on = utils.maybeObservable(options.on);
 
         options.options && (this.options = options.options);
@@ -966,7 +966,7 @@ ko.bindingHandlers.ribboninput = {
             inputBinding += ", valueUpdate: valueUpdate";
         }
 
-        inputBinding += ", ribbonclass: $data.class, on: on";
+        inputBinding += ", on: on, event: event";
 
         $inputElement.attr("data-bind", inputBinding);
         $inputElement.appendTo(type === "checkbox" && $label ? $label : $container);
