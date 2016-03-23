@@ -247,8 +247,8 @@ export class RibbonItem {
         let bindings = Object.keys(this.bindings);
             
         return "css: css, visible: visible" +
-            (bindings.length ? "," : "") +
-            bindings.map(b => `${b}: ${b}`).join(",");
+            (bindings.length ? ", " : "") +
+            bindings.map(b => `${b}: bindings.${b}`).join(", ");
     }
     
     static create(item: any): RibbonItem {
@@ -409,6 +409,10 @@ export class RibbonFlyout extends RibbonItem {
             return;
         }
         
+        if ($(e.target).is(".ribbon-autoclose, .ribbon-autoclose *")) {
+            parents.shift();
+        }
+        
         $(".ribbon-flyout-popup").each((i, el: HTMLElement) => {
             if (parents.indexOf(el) === -1) {
                 el.parentElement.removeChild(el);
@@ -447,6 +451,7 @@ export interface RibbonButtonOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
+    autoclose?: MaybeSubscribable<boolean>;
     click?: () => any;
 }
 
@@ -454,6 +459,7 @@ export class RibbonButton extends RibbonItem {
     title: MaybeSubscribable<string>;
     icon: MaybeSubscribable<string>;
     selected: MaybeSubscribable<boolean>;
+    autoclose: MaybeSubscribable<boolean>;
     click: () => any;
 
     constructor(options: RibbonButtonOptions) {
@@ -462,6 +468,7 @@ export class RibbonButton extends RibbonItem {
         this.title = utils.maybeObservable(options.title, "");
         this.icon = utils.maybeObservable(options.icon, "icon-base");
         this.selected = utils.maybeObservable(options.selected, false);
+        this.autoclose = utils.maybeObservable(options.autoclose, false);
         this.click = options.click || function () { return null; };
     }
 }
@@ -865,7 +872,7 @@ createTemplatedBindingHandler("ribbonbutton", {
     create() {
         const 
             root = createRoot(),
-            $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }").appendTo(root);
+            $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected, 'ribbon-autoclose': autoclose }").appendTo(root);
             
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($bt);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($bt);

@@ -1,6 +1,17 @@
 <style>
     .rib-container { position: absolute; left: 0; right: 0; top: 150px; }
+    .rib-container h5 { margin: 0; padding: 0; text-align: center; }
+    input.ribbon-test-input { width: 150px; }
 </style>
+<h2>Ribbon</h2>
 <div class="rib-container">
     <div data-bind="ribbon: ribbon"></div>
 </div>
+<script id="ribbon-test-group" type="text/html">
+    <h3 data-bind="text: title"></h3>
+    <h4>This is a template group</h4>
+</script>
+<script id="ribbon-test-item" type="text/html">
+    <input class="ribbon-test-input" type="text" data-bind="textInput: value" />
+    <h5 data-bind="text: value"></h5>
+</script>

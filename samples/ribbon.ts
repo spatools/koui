@@ -3,7 +3,7 @@
 
 import * as ko from "knockout";
 import { getRandom as getRandomIcon } from "./icons";
-import { Ribbon } from "../src/ribbon";
+import { Ribbon, RibbonGroupOptions } from "../src/ribbon";
 
 export module buttons {
     export function createToggleButton(title = "Toggle") {
@@ -24,6 +24,16 @@ export module buttons {
             title: title,
             icon: getRandomIcon(),
             click: console.log.bind(console)
+        };
+    }
+    
+    export function createAutocloseButton(title = "Autoclose") {
+        return {
+            __: "button",
+            title: title,
+            icon: getRandomIcon(),
+            autoclose: true,
+            click: console.log.bind(console, "autoclose")
         };
     }
     
@@ -195,6 +205,7 @@ export module flyouts {
             title: "Button",
             icon: "fa fa-flag-checkered",
             content: buttons.createButtons(Math.random() * 5)
+                .concat([buttons.createAutocloseButton()])
         };
     }
     
@@ -234,6 +245,105 @@ export module flyouts {
     }
 }
 
+export module specials {
+    export function createTemplateGroup(title = "Group Template", template = "ribbon-test-group"): RibbonGroupOptions {
+        return { title, template };
+    }
+    
+    export function createItemGroup(template = "ribbon-test-item") {
+        return {
+            title: "Item Template",
+            content: [
+                {
+                    __: "input",
+                    value: ko.observable("Some value"),
+                    template: "ribbon-test-item"
+                }
+            ]
+        };
+    }
+    
+    export function createShowHideGroups() {
+        const 
+            group = createTemplateGroup("Visibility Group"),
+            groupVisible = ko.observable(true),
+            itemVisible = ko.observable(false);
+            
+        group.visible = groupVisible;
+            
+        return [
+            {
+                title: "Show / Hide",
+                content: [
+                    {
+                        __: "list",
+                        content: [
+                            {
+                                __: "checkbox",
+                                label: "Show group",
+                                checked: groupVisible
+                            }, {
+                                __: "checkbox",
+                                label: "Show item",
+                                checked: itemVisible
+                            }, {
+                                __: "input",
+                                type: "hidden",
+                                label: "Visibility item",
+                                visible: itemVisible
+                            }
+                        ]
+                    }
+                ]
+            },
+            group
+        ];
+    }
+    
+    export function createCustomBindingGroup() {
+        const width = ko.observable(150);
+        
+        return {
+            title: "Custom bindings",
+            content: [
+                {
+                   __: "button",
+                   icon: getRandomIcon(),
+                   title: "Double Click",
+                   bindings: {
+                       event: { dblclick() { alert("Double clicked !"); } }
+                   }
+                }, {
+                    __: "form",
+                    content: [
+                        {
+                            __: "input",
+                            value: "A sample value",
+                            css: "ribbon-long-text",
+                            bindings: {
+                                style: { width: ko.pureComputed(() => width() + "px") }
+                            }
+                        }, {
+                            __: "input",
+                            type: "number",
+                            label: "Width",
+                            value: width
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+    
+    export function createSpecialGroups() {
+        return [
+            createTemplateGroup(),
+            createItemGroup(),
+            createCustomBindingGroup()
+        ].concat(createShowHideGroups());
+    }
+}
+
 export const ribbon = new Ribbon({
     backButtonIcon: "fa fa-arrow-left",
     isCollapsed: false,
@@ -251,8 +361,7 @@ export const ribbon = new Ribbon({
                 }, {
                     title: "Lists",
                     content: lists.createLists()
-                },
-                {
+                }, {
                     title: "Flyouts",
                     content: flyouts.createFlyouts()
                 }
@@ -288,8 +397,7 @@ export const ribbon = new Ribbon({
         {
             title: "Special page",
             special: true,
-            groups: [
-            ]
+            groups: specials.createSpecialGroups()
         }
     ]
 });

@@ -40,6 +40,10 @@
             display: inline-block;
             vertical-align: top;
             white-space: nowrap;
+            
+            li {
+                vertical-align: top;
+            }
         }
 
         input, select, textarea {
@@ -455,10 +459,13 @@
         &.ribbon-long-text {
             display: block;
             width: 100%;
-
+            
             input.ribbon-input-text {
                 display: block;
                 width: 100%;
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
             }
         }
         
