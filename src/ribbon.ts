@@ -1,6 +1,7 @@
 import * as ko from "knockout";
 import * as $ from "jquery";
 import { Slider } from "./slider";
+
 import {
     TemplatedBindingHandler,
     
@@ -402,18 +403,23 @@ export class RibbonFlyout extends RibbonItem {
             return;
         }
         
-        doc.addEventListener("click", RibbonFlyout._onDocumentClick, true);
+        doc.addEventListener("mouseup", RibbonFlyout._onDocumentClick, true);
         RibbonFlyout._isDocRegistered = true;
     }
 
     private static _isDocRegistered = false;
     private static _onDocumentClick(e: MouseEvent) {
-        const parents = RibbonFlyout.getAllHosts(e.target as Node);
+        let parents = RibbonFlyout.getAllHosts(e.target as Node);
+        
+        const slider = Slider.isSlidding;
+        if (slider) {
+            parents = parents.concat(RibbonFlyout.getAllHosts(slider.element));
+        }
         
         if (parents.length === 0) {
             $(".ribbon-flyout-popup").remove();
             
-            doc.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
+            doc.removeEventListener("mouseup", RibbonFlyout._onDocumentClick, true);
             RibbonFlyout._isDocRegistered = false;
             
             return;

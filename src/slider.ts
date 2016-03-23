@@ -36,7 +36,7 @@ export interface SliderOptions {
 }
 
 export class Slider {
-    private element: Element;
+    public element: Element;
     private $element: JQuery;
     private $handle: JQuery;
     private isMouseDown: boolean = false;
@@ -51,6 +51,8 @@ export class Slider {
     public coef: ko.Computed<number>;
     public position: ko.Computed<number>;
 
+    public static isSlidding: Slider = null;
+    
     constructor(value: number);
     constructor(value: ko.Subscribable<number>);
     constructor(options: SliderOptions);
@@ -126,6 +128,7 @@ export class Slider {
 
     public onMouseDown(e: MouseEvent): void {
         this.isMouseDown = true;
+        Slider.isSlidding = this;
 
         const pos = this.getRelativePosition(e.pageX, e.pageY);
         this.position(pos.x);
@@ -147,6 +150,7 @@ export class Slider {
     }
     public onMouseUp(): void {
         this.isMouseDown = false;
+        Slider.isSlidding = null;
         
         $(document.body).css(prefixStyle("userSelect"), "");
         $(document).off({
@@ -167,6 +171,7 @@ export class Slider {
             y: y - offset.top
         };
     }
+    
 }
 
 createTemplatedHandler("slider", {

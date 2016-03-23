@@ -1,4 +1,5 @@
 /*eslint no-console: [0]*/
+/// <amd-dependency path="css!../css/slider.css" />
 /// <amd-dependency path="css!../css/ribbon.css" />
 
 import * as ko from "knockout";
