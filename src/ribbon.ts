@@ -6,16 +6,19 @@ import { Slider } from "./slider";
 export type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
 export type Disposable = { dispose(): void; };
 
+const
+    doc = document;
+
 //#region Ribbon
 
 export interface RibbonOptions {
-    pages?: any;
-    selectedPage?: any;
-    isCollapsed?: any;
-    isLocked?: any;
-    backButtonIcon?: any;
+    pages?: Array<RibbonPage | RibbonPageOptions> | MaybeSubscribable<RibbonPage>;
+    selectedPage?: MaybeSubscribable<RibbonPage>;
+    isCollapsed?: MaybeSubscribable<boolean>;
+    isLocked?: MaybeSubscribable<boolean>;
+    backButtonIcon?: MaybeSubscribable<string>;
     backButtonClick?: () => any;
-    triggerResize?: any;
+    triggerResize?: MaybeSubscribable<boolean>;
 }
 
 export class Ribbon {
@@ -139,7 +142,7 @@ export class Ribbon {
 export interface RibbonPageOptions {
     title?: MaybeSubscribable<string>;
     special?: MaybeSubscribable<boolean>;
-    groups?: MaybeSubscribable<any[]>;
+    groups?: Array<RibbonGroup | RibbonGroupOptions> | MaybeSubscribable<RibbonGroup[]>;
     pop?: MaybeSubscribable<boolean>;
 }
 
@@ -210,7 +213,35 @@ export class RibbonGroup {
     }
 }
 
+//#region Ribbon Item
+
+export interface RibbonItemOptions {
+    __?: string;
+    bindings?: Object;
+    class?: MaybeSubscribable<Object | string>;
+    css?: MaybeSubscribable<Object | string>;
+    template?: MaybeSubscribable<string | Node>;
+}
+
 export class RibbonItem {
+    bindings: Object;
+    css: MaybeSubscribable<Object | string>;
+    template: MaybeSubscribable<string | Node>;
+    
+    constructor(options: RibbonItemOptions) {
+        this.bindings = options.bindings || {};
+        this.css = utils.maybeObservable(options.css || options.class);
+        this.template = utils.maybeObservable(options.template);
+    }
+    
+    public getBindingString(): string {
+        let bindings = Object.keys(this.bindings);
+            
+        return "css: css" +
+            (bindings.length ? "," : "") +
+            bindings.map(b => `${b}: ${b}`).join(",");
+    }
+    
     static create(item: any): RibbonItem {
         if (item instanceof RibbonItem) {
             return item;
@@ -258,7 +289,7 @@ export class RibbonItem {
 
 //#region Ribbon Flyout 
 
-export interface RibbonFlyoutOptions {
+export interface RibbonFlyoutOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
@@ -277,7 +308,7 @@ export class RibbonFlyout extends RibbonItem {
     content: ko.ObservableArray<RibbonItem>;
 
     constructor(options: RibbonFlyoutOptions) {
-        super();
+        super(options);
         
         this.title = utils.maybeObservable(options.title, "");
         this.icon = utils.maybeObservable(options.icon, "icon-base");
@@ -289,13 +320,13 @@ export class RibbonFlyout extends RibbonItem {
     
     public init(button: HTMLButtonElement, bindingContext: ko.BindingContext<any>): void {
         this._button = button;
-        this._context = bindingContext.createChildContext(this, "flyout");
+        this._context = bindingContext.createChildContext(this, "ribbonflyout");
         
         const 
-            virtual = document.createElement("div"),
+            virtual = doc.createElement("div"),
             $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").appendTo(virtual);
             
-        $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
+        $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
         
         new ko.templateSources.anonymousTemplate(virtual).nodes(virtual);
         
@@ -313,7 +344,7 @@ export class RibbonFlyout extends RibbonItem {
                 .addClass("ribbon-content")
                 .addClass("ribbon-flyout-popup")
                 .css("opacity", "0")
-                .appendTo(document.body),
+                .appendTo(doc.body),
             
             host = $host.get(0);
         
@@ -332,9 +363,7 @@ export class RibbonFlyout extends RibbonItem {
             button = this._button,
             host = this._host,
             bbox = button.getBoundingClientRect(),
-            
-            doc = document.documentElement,
-            docWidth = doc.clientWidth;
+            docWidth = doc.documentElement.clientWidth;
         
         let x = bbox.left,
             y = bbox.bottom,
@@ -354,7 +383,7 @@ export class RibbonFlyout extends RibbonItem {
             return;
         }
         
-        document.addEventListener("click", RibbonFlyout._onDocumentClick, true);
+        doc.addEventListener("click", RibbonFlyout._onDocumentClick, true);
         RibbonFlyout._isDocRegistered = true;
     }
 
@@ -365,7 +394,7 @@ export class RibbonFlyout extends RibbonItem {
         if (parents.length === 0) {
             $(".ribbon-flyout-popup").remove();
             
-            document.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
+            doc.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
             RibbonFlyout._isDocRegistered = false;
             
             return;
@@ -380,13 +409,13 @@ export class RibbonFlyout extends RibbonItem {
     
     private static getFlyout(node: Node): RibbonFlyout {
         const ctx = ko.contextFor(node);
-        return ctx && ctx["flyout"];
+        return ctx && ctx["ribbonflyout"];
     }
     
     private static getParentsHosts(flyout: RibbonFlyout): HTMLElement[] {
         const 
             ctx = ko.contextFor(flyout._button).$parentContext,
-            parent = ctx["flyout"] as RibbonFlyout;
+            parent = ctx["ribbonflyout"] as RibbonFlyout;
         
         return parent ? 
             [parent._host].concat(RibbonFlyout.getParentsHosts(parent)) :
@@ -405,7 +434,7 @@ export class RibbonFlyout extends RibbonItem {
 
 //#region Ribbon Button
 
-export interface RibbonButtonOptions {
+export interface RibbonButtonOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
@@ -421,7 +450,7 @@ export class RibbonButton extends RibbonItem {
     click: () => any;
 
     constructor(options: RibbonButtonOptions) {
-        super();
+        super(options);
         
         this.title = utils.maybeObservable(options.title, "");
         this.icon = utils.maybeObservable(options.icon, "icon-base");
@@ -439,13 +468,13 @@ export class RibbonList extends RibbonItem {
     public items: ko.ObservableArray<RibbonItem>;
 
     constructor(items: any) {
-        super();
+        super({});
 
         this.items = utils.createObservableArray(items, RibbonItem.create);
     }
 }
 
-export interface RibbonListItemOptions {
+export interface RibbonListItemOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     click?: () => any;
@@ -457,7 +486,7 @@ export class RibbonListItem extends RibbonItem {
     click: () => any;
 
     constructor(options: RibbonListItemOptions) {
-        super();
+        super(options);
 
         this.title = utils.createObservable(options.title, "");
         this.icon = utils.createObservable(options.icon, "icon-list-base");
@@ -469,7 +498,7 @@ export class RibbonListItem extends RibbonItem {
 
 //#region Ribbon Form 
 
-export interface RibbonFormOptions {
+export interface RibbonFormOptions extends RibbonItemOptions {
     items?: ko.ObservableArray<RibbonItem>;
     inline?: MaybeSubscribable<boolean>;
 }
@@ -479,14 +508,14 @@ export class RibbonForm extends RibbonItem {
     inline: MaybeSubscribable<boolean>;
 
     constructor(items: any, inline?: any) {
-        super();
+        super({});
         
         this.items = utils.createObservableArray(items, RibbonItem.create);
         this.inline = utils.maybeObservable(inline, false);
     }
 }
 
-export interface RibbonInputOptions {
+export interface RibbonInputOptions extends RibbonItemOptions {
     label?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     type?: MaybeSubscribable<string>;
@@ -518,7 +547,7 @@ export class RibbonInput extends RibbonItem {
     attr: any;
 
     constructor(options: RibbonInputOptions) {
-        super();
+        super(options);
         
         this.label = utils.maybeObservable(options.label, "");
         this.icon = utils.maybeObservable(options.icon, "");
@@ -540,7 +569,7 @@ export class RibbonInput extends RibbonItem {
 
 //#region Ribbon Checkbox
 
-export interface RibbonCheckboxOptions {
+export interface RibbonCheckboxOptions extends RibbonItemOptions {
     label?: MaybeSubscribable<string>;
     checked?: MaybeSubscribable<boolean>;
 }
@@ -550,7 +579,7 @@ export class RibbonCheckbox extends RibbonItem {
     checked: MaybeSubscribable<boolean>;
 
     constructor(options: RibbonCheckboxOptions) {
-        super();
+        super(options);
         
         this.label = utils.maybeObservable(options.label);
         this.checked = utils.maybeObservable(options.checked, false);
@@ -561,7 +590,7 @@ export class RibbonCheckbox extends RibbonItem {
 
 //#region Ribbon Slider
 
-export interface RibbonSliderOptions {
+export interface RibbonSliderOptions extends RibbonItemOptions {
     label?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     min?: MaybeSubscribable<number>;
@@ -579,7 +608,7 @@ export class RibbonSlider extends RibbonItem {
     value: MaybeSubscribable<number>;
 
     constructor(options: RibbonSliderOptions) {
-        super();
+        super(options);
         
         this.label = utils.maybeObservable(options.label);
         this.icon = utils.maybeObservable(options.icon);
@@ -603,23 +632,23 @@ declare module "knockout" {
             update(element: HTMLElement, valueAccessor: () => string): void;
         };
         
-        ribbon: BindingHandler;
-        ribbonPage: BindingHandler;
-        ribbonGroup: BindingHandler;
-        ribbonList: BindingHandler;
-        ribbonForm: BindingHandler;
-        ribbonFlyout: BindingHandler;
-        ribbonItem: BindingHandler;
-        ribbonButton: BindingHandler;
-        ribbonCheckbox: BindingHandler;
-        ribbonInput: BindingHandler;
-        ribbonSlider: BindingHandler;
+        ribbon: TemplatedBindingHandler;
+        ribbonpage: TemplatedBindingHandler;
+        ribbongroup: TemplatedBindingHandler;
+        ribbonitem: BindingHandler;
+        ribbonlist: TemplatedBindingHandler;
+        ribbonform: TemplatedBindingHandler;
+        ribbonflyout: TemplatedBindingHandler;
+        ribbonbutton: TemplatedBindingHandler;
+        ribboncheckbox: TemplatedBindingHandler;
+        ribbonslider: TemplatedBindingHandler;
+        ribboninput: BindingHandler;
     }
 } 
 
 const RIBBON_CLASSES_KEY = "__RIBBON_CLASSES_KEY__";
 ko.bindingHandlers.ribbonclass = {
-    update: function (element, valueAccessor): void {
+    update(element, valueAccessor): void {
         const value = String(ko.unwrap(valueAccessor()) || "").trim();
         
         ko.utils.toggleDomNodeCssClass(element, element[RIBBON_CLASSES_KEY], false);
@@ -631,7 +660,7 @@ ko.bindingHandlers.ribbonclass = {
 };
 
 ko.bindingHandlers.ribbonpop = {
-    init: function(element, valueAccessor): void {
+    init(element, valueAccessor): void {
         const 
             $element = $(element),
             options = ko.unwrap(valueAccessor()),
@@ -670,17 +699,12 @@ ko.bindingHandlers.ribbonpop = {
     }
 };
 
-ko.bindingHandlers.ribbon = {
-    init: function (element, valueAccessor) {
-        element["_ribbon"] = Ribbon.create(ko.unwrap(valueAccessor()));
-        
-        $(element).addClass("ribbon");
-        
+createTemplatedBindingHandler("ribbon", {
+    create() {
         const
-            ribbon = element["_ribbon"] as Ribbon,
-            $container = $("<div>"),
+            root = doc.createElement("div"),
 
-            $ribbon = $("<div>").addClass("ribbon-content").attr("data-bind", "css: { 'ribbon-locked': isLocked, 'ribbon-collapsed': isCollapsed }").appendTo($container),
+            $ribbon = $("<div>").addClass("ribbon-content").attr("data-bind", "css: { 'ribbon-locked': isLocked, 'ribbon-collapsed': isCollapsed }").appendTo(root),
             backButton = $("<a>").addClass("ribbon-back").attr("data-bind", "click: backButtonClick").appendTo($ribbon);
 
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: backButtonIcon").appendTo(backButton);
@@ -691,174 +715,194 @@ ko.bindingHandlers.ribbon = {
 
         $("<a>").addClass("ribbon-expander").attr("data-bind", "click: expand, css: { 'ribbon-expander-expanded': !isCollapsed() }").appendTo($expand);
 
-        var pages = $("<ul>").addClass("ribbon-page-container").attr("data-bind", "foreach: pages").appendTo($ribbon);
-        $("<li>").attr("data-bind", "ribbonPage: $data, css: { special: special, 'ribbon-page-selected': $parent.selectedPage() == $data }").appendTo(pages);
-        ribbon.selectedPage(ko.unwrap(ribbon.pages)[0]);
+        const pages = $("<ul>").addClass("ribbon-page-container").attr("data-bind", "foreach: pages").appendTo($ribbon);
+        $("<li>").attr("data-bind", "ribbonpage: $data, css: { special: special, 'ribbon-page-selected': $parent.selectedPage() == $data }").appendTo(pages);
 
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
+        return root;
     },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        renderTemplate(element, element["_ribbon"], bindingContext, "ribbon");
+    init(element, valueAccessor) {
+        const ribbon = element["_ribbon"] = Ribbon.create(ko.unwrap(valueAccessor()));
+        
+        if (!ko.unwrap(ribbon.selectedPage)) {
+            ribbon.selectedPage(ko.unwrap(ribbon.pages)[0]);
+        }
+        
+        $(element).addClass("ribbon");
+    },
+    update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        renderCached("ribbon", element, element["_ribbon"], bindingContext);
     }
-};
+});
 
-ko.bindingHandlers.ribbonPage = {
-    init: function (element) {
-        const $container = $("<div>");
-
-        $(element).addClass("ribbon-page");
+createTemplatedBindingHandler("ribbonpage", {
+    create() {
+        const root = doc.createElement("div");
 
         $("<a>")
             .addClass("ribbon-page-header")
             .attr("data-bind", "click: ribbon.selectPage.bind(ribbon), text: title")
-            .appendTo($container);
+            .appendTo(root);
 
         const 
             $content = $("<div>")
                 .addClass("ribbon-page-content")
                 .attr("data-bind", "if: ribbon.selectedPage() === $data, ribbonpop: { visible: $parent.pop, enabled: ribbon.isCollapsed }")
-                .appendTo($container),
+                .appendTo(root),
                 
             $groups = $("<ul>")
                 .addClass("ribbon-group-container")
                 .attr("data-bind", "template: { foreach: groups, as: 'group' }")
                 .appendTo($content);
             
-        $("<li>").attr("data-bind", "ribbonGroup: $data, visible: visible").appendTo($groups);
+        $("<li>").attr("data-bind", "ribbongroup: $data, visible: visible").appendTo($groups);
 
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
+        return root;
     },
-    update: renderTemplateUpdate
-};
+    init(element) {
+        $(element).addClass("ribbon-page");
+    }
+});
 
-ko.bindingHandlers.ribbonGroup = {
-    init: function (element) {
-        const $container = $("<div>");
+createTemplatedBindingHandler("ribbongroup", {
+    create() {
+        const root = doc.createElement("div");
 
+        $("<h3>").attr("data-bind", "text: title").appendTo(root);
+
+        const $items = $("<ul>").addClass("ribbon-group-content").attr("data-bind", "foreach: { data: content, as: 'item' }").appendTo(root);
+        $("<li>").addClass("ribbon-group-item").attr("data-bind", "ribbonitem: $data").appendTo($items);
+
+        return root;
+    },
+    init(element) {
         $(element).addClass("ribbon-group");
-        $("<h3>").attr("data-bind", "text: title").appendTo($container);
+    }
+});
 
-        const $items = $("<ul>").addClass("ribbon-group-content").attr("data-bind", "foreach: content").appendTo($container);
-        $("<li>").addClass("ribbon-group-item").attr("data-bind", "ribbonItem: $data").appendTo($items);
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
-    },
-    update: renderTemplateUpdate
-};
-
-ko.bindingHandlers.ribbonList = {
-    init: function (element) {
-        const $container = $("<div>");
-
-        $(element).addClass("ribbon-list");
-
-        const $ul = $("<ul>").addClass("ribbon-list-content").attr("data-bind", "foreach: items").appendTo($container);
-        $("<li>").addClass("ribbon-list-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
-    },
-    update: renderTemplateUpdate
-};
-
-ko.bindingHandlers.ribbonForm = {
-    init: function (element) {
-        const $container = $("<div>");
-
-        $(element).addClass("ribbon-form");
+ko.bindingHandlers.ribbonitem = {
+    init(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        const
+            data = ko.unwrap(valueAccessor()) as RibbonItem,
+            handler = getRibbonItemHandler(data);
+            
+        const root = document.createElement("div");
+        const el = document.createElement(element.tagName);
+        el.setAttribute("class", element.getAttribute("class"));
+        el.setAttribute("data-bind", data.getBindingString() + ", " + handler + ": $data");
+        root.appendChild(el);
         
-        const $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: items").appendTo($container);
-        $("<li>").addClass("ribbon-form-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
+        new ko.templateSources.anonymousTemplate(element).nodes(root);
+        
+        ko.renderTemplate(element, bindingContext, {}, element, "replaceNode");
+        
         return { controlsDescendantBindings: true };
-    },
-    update: renderTemplateUpdate
+    }
 };
 
-ko.bindingHandlers.ribbonFlyout = {
-    init: function (element) {
-        const $container = $("<div>");
+createTemplatedBindingHandler("ribbonlist", {
+    create() {
+        const 
+            root = doc.createElement("div"),
+            $ul = $("<ul>").addClass("ribbon-list-content").attr("data-bind", "foreach: { data: items, as: 'item' }").appendTo(root);
+            
+        $("<li>").addClass("ribbon-list-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
+        
+        return root;
+    },
+    init(element) {
+        $(element).addClass("ribbon-list");
+    }
+});
 
-        $(element).addClass("ribbon-flyout").addClass("ribbon-button");
+createTemplatedBindingHandler("ribbonform", {
+    create() {
+        const 
+            root = doc.createElement("div"),
+            $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: { data: items, as: 'item' }").appendTo(root);
+            
+        $("<li>").addClass("ribbon-form-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
 
-        const $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "click: click, css: { selected: selected }").appendTo($container);
+        return root;
+    },
+    init(element) {
+        $(element).addClass("ribbon-form");
+    }
+});
+
+createTemplatedBindingHandler("ribbonflyout", {
+    create() {
+        const 
+            root = doc.createElement("div"),
+            $button = $("<button>").addClass("ribbon-flyout-button").attr("data-bind", "click: click, css: { selected: selected }").appendTo(root);
+            
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($button);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($button);
         $("<span>").addClass("ribbon-flyout-arrow").appendTo($button);
-
-        // const $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").hide().appendTo($container);
-        // $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonItem: $data").appendTo($ul);
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
+        
+        return root;
     },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init(element) {
+        $(element).addClass("ribbon-flyout").addClass("ribbon-button");
+    },
+    update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         const flyout = ko.unwrap(valueAccessor()) as RibbonFlyout;
             
-        renderTemplate(element, flyout, bindingContext, "flyout", { afterRender });
+        renderCached("ribbonflyout", element, flyout, bindingContext, "ribbonflyout", { afterRender });
 
         function afterRender(nodes: [HTMLButtonElement, HTMLElement]) {
             flyout.init(nodes[0], bindingContext);
         }
     }
-};
+});
 
-ko.bindingHandlers.ribbonItem = {
-    init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            data = ko.unwrap(valueAccessor()),
-            handler = getRibbonItemHandler(data);
-
-        return ko.bindingHandlers[handler].init(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext);
-    },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            data = ko.unwrap(valueAccessor()),
-            handler = getRibbonItemHandler(data);
-
-        ko.bindingHandlers[handler].update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext);
-    }
-};
-
-ko.bindingHandlers.ribbonButton = {
-    init: function (element) {
-        const $container = $("<div>");
-
-        $(element).addClass("ribbon-button");
-
-        const $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }, ribbonclass: $data.class").appendTo($container);
+createTemplatedBindingHandler("ribbonbutton", {
+    create() {
+        const 
+            root = doc.createElement("div"),
+            $bt = $("<button>").attr("data-bind", "click: click, css: { selected: selected }").appendTo(root);
+            
         $("<span>").addClass("ribbon-icon").attr("data-bind", "ribbonclass: icon").appendTo($bt);
         $("<span>").addClass("ribbon-button-title").attr("data-bind", "text: title").appendTo($bt);
 
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
+        return root;
     },
-    update: renderTemplateUpdate
-};
+    init(element) {
+        $(element).addClass("ribbon-button");
+    }
+});
 
-ko.bindingHandlers.ribbonCheckbox = {
-    init: function (element) {
+createTemplatedBindingHandler("ribboncheckbox", {
+    create() {
         const 
-            $container = $("<div>"),
-            $label = $("<label>").addClass("ribbon-label").appendTo($container);
+            root = doc.createElement("div"),
+            $label = $("<label>").addClass("ribbon-label").appendTo(root);
 
         $("<span>").attr("data-bind", "text: label").appendTo($label);
         $("<input>").attr("type", "checkbox").attr("data-bind", "checked: checked").appendTo($label);
 
-        $(element).addClass("ribbon-checkbox");
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
+        return root;
     },
-    update: renderTemplateUpdate
-};
+    init(element) {
+        $(element).addClass("ribbon-checkbox");
+    }
+});
 
-ko.bindingHandlers.ribbonInput = {
-    init: function (element, valueAccessor) {
+createTemplatedBindingHandler("ribbonslider", {
+    create() {
+        const root = doc.createElement("div");
+
+        $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo(root);
+        $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo(root);
+
+        return root;
+    },
+    init(element) {
+        $(element).addClass("ribbon-slider");
+    }
+});
+
+ko.bindingHandlers.ribboninput = {
+    init(element, valueAccessor) {
         const
             input = ko.unwrap(valueAccessor()),
             label = ko.unwrap(input.label),
@@ -930,32 +974,10 @@ ko.bindingHandlers.ribbonInput = {
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
         return { controlsDescendantBindings: true };
     },
-    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        const
-            input = ko.unwrap(valueAccessor()),
-            _class = ko.unwrap(input.class);
-
-        if (_class) {
-            ko.bindingHandlers.css.update(element, utils.createAccessor(_class));
-        }
-        
-        renderTemplate(element, input, bindingContext, "input");
+    update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        const input = ko.unwrap(valueAccessor());
+        renderTemplate(input.template || element, input, bindingContext, "ribboninput", {}, element);
     }
-};
-
-ko.bindingHandlers.ribbonSlider = {
-    init: function (element) {
-        const $container = $("<div>");
-
-        $(element).addClass("ribbon-slider");
-
-        $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo($container);
-        $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo($container);
-
-        new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-        return { controlsDescendantBindings: true };
-    },
-    update: renderTemplateUpdate
 };
 
 //#endregion
@@ -964,12 +986,65 @@ ko.bindingHandlers.ribbonSlider = {
 
 const TMPL_COMPUTED_DOM_DATA_KEY = "__KOUI_TEMPLATE_COMPUTED__";
 
-function renderTemplateUpdate(element: Node, valueAccessor: () => any, allBindingsAccessor: ko.AllBindingsAccessor, viewModel: any, bindingContext: ko.BindingContext<any>) {
-    renderTemplate(element, ko.unwrap(valueAccessor()), bindingContext);
+export interface TemplatedBindingHandler extends ko.BindingHandler {
+    template?: Element;
+    create(): Element;
+    beforeUpdate?(): void;
 }
 
-function renderTemplate(element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>) {
-    const templateComputed = ko.renderTemplate(element, bindingContext.createChildContext(data, dataAlias), options || {}, element);
+function createTemplatedBindingHandler(name: string, bindingHandler: TemplatedBindingHandler) {
+    const 
+        oldInit = bindingHandler.init,
+        beforeUpdate = bindingHandler.beforeUpdate;
+    
+    bindingHandler.init = function() {
+        oldInit && oldInit.apply(this, arguments);
+        
+        if (!bindingHandler.template) {
+            let template = bindingHandler.template = bindingHandler.create();
+            new ko.templateSources.anonymousTemplate(template).nodes(template);
+        }
+        
+        return { controlsDescendantBindings: true };
+    };
+    
+    if (!bindingHandler.update) {
+        bindingHandler.update = function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            beforeUpdate && beforeUpdate.apply(this, arguments);
+            
+            const 
+                data = ko.unwrap(valueAccessor()),
+                
+                templateComputed = ko.renderTemplate(
+                    data.template || bindingHandler.template,
+                    bindingContext.createChildContext(data, name),
+                    {},
+                    element
+                );
+                
+            disposeOldComputedAndStoreNewOne(element, templateComputed);
+        };
+    }
+    
+    ko.bindingHandlers[name] = bindingHandler;
+}
+
+function renderTemplate(template: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>, root?: Node) {
+    const element = root || template;
+    const templateComputed = ko.renderTemplate(template, bindingContext.createChildContext(data, dataAlias), options || {}, element);
+    disposeOldComputedAndStoreNewOne(element, templateComputed);
+}
+
+function renderCached(handler: string, element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>) {
+    const 
+        hndl = ko.bindingHandlers[handler] as TemplatedBindingHandler,
+        templateComputed = ko.renderTemplate(
+            hndl.template, 
+            bindingContext.createChildContext(data, dataAlias || handler), 
+            options || {}, 
+            element
+        );
+        
     disposeOldComputedAndStoreNewOne(element, templateComputed);
 }
 
@@ -985,25 +1060,25 @@ function disposeOldComputedAndStoreNewOne(element: Node, newComputed: ko.Compute
 
 function getRibbonItemHandler(item: any): string {
     if (item instanceof RibbonButton) {
-        return "ribbonButton";
+        return "ribbonbutton";
     }
     else if (item instanceof RibbonList) {
-        return "ribbonList";
+        return "ribbonlist";
     }
     else if (item instanceof RibbonForm) {
-        return "ribbonForm";
+        return "ribbonform";
     }
     else if (item instanceof RibbonInput) {
-        return "ribbonInput";
+        return "ribboninput";
     }
     else if (item instanceof RibbonCheckbox) {
-        return "ribbonCheckbox";
+        return "ribboncheckbox";
     }
     else if (item instanceof RibbonFlyout) {
-        return "ribbonFlyout";
+        return "ribbonflyout";
     }
     else if (item instanceof RibbonSlider) {
-        return "ribbonSlider";
+        return "ribbonslider";
     }
 }
 
