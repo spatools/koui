@@ -122,6 +122,84 @@ export function bindAll(owner: any, ...methods: string[]) {
 
 //#endregion
 
+//#region Template Methods
+
+const TMPL_COMPUTED_DOM_DATA_KEY = "__KOUI_TEMPLATE_COMPUTED__";
+
+export interface TemplatedBindingHandler extends ko.BindingHandler {
+    template?: Element;
+    create(): Element;
+    beforeUpdate?(): void;
+}
+
+export function createTemplatedHandler(name: string, bindingHandler: TemplatedBindingHandler) {
+    const 
+        oldInit = bindingHandler.init,
+        beforeUpdate = bindingHandler.beforeUpdate;
+    
+    bindingHandler.init = function() {
+        oldInit && oldInit.apply(this, arguments);
+        
+        if (!bindingHandler.template) {
+            let template = bindingHandler.template = bindingHandler.create();
+            new ko.templateSources.anonymousTemplate(template).nodes(template);
+        }
+        
+        return { controlsDescendantBindings: true };
+    };
+    
+    if (!bindingHandler.update) {
+        bindingHandler.update = function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            beforeUpdate && beforeUpdate.apply(this, arguments);
+            
+            const 
+                data = ko.unwrap(valueAccessor()),
+                
+                templateComputed = ko.renderTemplate(
+                    data.template || bindingHandler.template,
+                    bindingContext.createChildContext(data, name),
+                    {},
+                    element
+                );
+                
+            disposeOldComputedAndStoreNewOne(element, templateComputed);
+        };
+    }
+    
+    ko.bindingHandlers[name] = bindingHandler;
+}
+
+export function renderTemplate(template: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>, root?: Node) {
+    const element = root || template;
+    const templateComputed = ko.renderTemplate(template, bindingContext.createChildContext(data, dataAlias), options || {}, element);
+    disposeOldComputedAndStoreNewOne(element, templateComputed);
+}
+
+export function renderTemplateCached(handler: string, element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>) {
+    const 
+        hndl = ko.bindingHandlers[handler] as TemplatedBindingHandler,
+        templateComputed = ko.renderTemplate(
+            hndl.template, 
+            bindingContext.createChildContext(data, dataAlias || handler), 
+            options || {}, 
+            element
+        );
+        
+    disposeOldComputedAndStoreNewOne(element, templateComputed);
+}
+
+function disposeOldComputedAndStoreNewOne(element: Node, newComputed: ko.Computed<any>) { 
+    const oldComputed = ko.utils.domData.get(element, TMPL_COMPUTED_DOM_DATA_KEY);
+     
+    if (oldComputed && typeof oldComputed.dispose === "function") {
+        oldComputed.dispose();
+    }
+    
+    ko.utils.domData.set(element, TMPL_COMPUTED_DOM_DATA_KEY, (newComputed && newComputed.isActive()) ? newComputed : undefined); 
+} 
+
+//#endregion
+
 //#region Prefix Methods
 
 var vendorPrefix = null;

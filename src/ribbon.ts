@@ -1,7 +1,17 @@
 import * as ko from "knockout";
 import * as $ from "jquery";
-import * as utils from "./utils";
 import { Slider } from "./slider";
+import {
+    TemplatedBindingHandler,
+    
+    bindAll,
+    createObservable,
+    createObservableArray,
+    maybeObservable,
+    createTemplatedHandler,
+    renderTemplate,
+    renderTemplateCached
+} from "./utils";
 
 export type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
 export type Disposable = { dispose(): void; };
@@ -34,13 +44,13 @@ export class Ribbon {
     public backButtonClick: () => any = function () { return null; };
 
     constructor(options: RibbonOptions) {
-        this.pages = utils.createObservableArray(options.pages, RibbonPage.create);
-        this.selectedPage = utils.createObservable<RibbonPage>(options.selectedPage);
-        this.isCollapsed = utils.createObservable(options.isCollapsed, true);
-        this.isLocked = utils.maybeObservable(options.isLocked, false);
-        this.triggerResize = utils.maybeObservable(options.triggerResize, false);
+        this.pages = createObservableArray(options.pages, RibbonPage.create);
+        this.selectedPage = createObservable<RibbonPage>(options.selectedPage);
+        this.isCollapsed = createObservable(options.isCollapsed, true);
+        this.isLocked = maybeObservable(options.isLocked, false);
+        this.triggerResize = maybeObservable(options.triggerResize, false);
 
-        this.backButtonIcon = utils.maybeObservable(options.backButtonIcon, "");
+        this.backButtonIcon = maybeObservable(options.backButtonIcon, "");
         if (options.backButtonClick) {
             this.backButtonClick = options.backButtonClick;
         }
@@ -153,10 +163,10 @@ export class RibbonPage {
     pop: ko.Observable<boolean>;
 
     constructor(options: RibbonPageOptions) {
-        this.title = utils.maybeObservable(options.title, "Page Title");
-        this.special = utils.maybeObservable(options.special, false);
-        this.pop = utils.createObservable(options.pop, false);
-        this.groups = utils.createObservableArray(options.groups, RibbonGroup.create);
+        this.title = maybeObservable(options.title, "Page Title");
+        this.special = maybeObservable(options.special, false);
+        this.pop = createObservable(options.pop, false);
+        this.groups = createObservableArray(options.groups, RibbonGroup.create);
     }
 
     public show(): void {
@@ -199,14 +209,14 @@ export class RibbonGroup {
     content: ko.ObservableArray<RibbonItem>;
 
     constructor(options: RibbonGroupOptions) {
-        this.title = utils.maybeObservable(options.title, "");
-        this.priority = utils.maybeObservable(options.priority, 0);
-        this.isCollapsed = utils.maybeObservable(options.isCollapsed, false);
-        this.visible = utils.maybeObservable(options.visible, true);
-        this.icon = utils.maybeObservable(options.icon, "icon-base");
-        this.css = utils.maybeObservable(options.css);
-        this.template = utils.maybeObservable(options.template);
-        this.content = utils.createObservableArray(options.content, RibbonItem.create);
+        this.title = maybeObservable(options.title, "");
+        this.priority = maybeObservable(options.priority, 0);
+        this.isCollapsed = maybeObservable(options.isCollapsed, false);
+        this.visible = maybeObservable(options.visible, true);
+        this.icon = maybeObservable(options.icon, "icon-base");
+        this.css = maybeObservable(options.css);
+        this.template = maybeObservable(options.template);
+        this.content = createObservableArray(options.content, RibbonItem.create);
     }
     
     static create(group: RibbonGroup | RibbonGroupOptions): RibbonGroup {
@@ -238,9 +248,9 @@ export class RibbonItem {
     
     constructor(options: RibbonItemOptions) {
         this.bindings = options.bindings || {};
-        this.css = utils.maybeObservable(options.css || options.class);
-        this.visible = utils.maybeObservable(options.visible, true);
-        this.template = utils.maybeObservable(options.template);
+        this.css = maybeObservable(options.css || options.class);
+        this.visible = maybeObservable(options.visible, true);
+        this.template = maybeObservable(options.template);
     }
     
     public getBindingString(): string {
@@ -319,12 +329,12 @@ export class RibbonFlyout extends RibbonItem {
     constructor(options: RibbonFlyoutOptions) {
         super(options);
         
-        this.title = utils.maybeObservable(options.title, "");
-        this.icon = utils.maybeObservable(options.icon, "icon-base");
-        this.selected = utils.maybeObservable(options.selected, false);
-        this.content = utils.createObservableArray(options.content, RibbonItem.create);
+        this.title = maybeObservable(options.title, "");
+        this.icon = maybeObservable(options.icon, "icon-base");
+        this.selected = maybeObservable(options.selected, false);
+        this.content = createObservableArray(options.content, RibbonItem.create);
         
-        utils.bindAll(this, "click", "position");
+        bindAll(this, "click", "position");
     }
     
     public init(button: HTMLButtonElement, bindingContext: ko.BindingContext<any>): void {
@@ -465,10 +475,10 @@ export class RibbonButton extends RibbonItem {
     constructor(options: RibbonButtonOptions) {
         super(options);
         
-        this.title = utils.maybeObservable(options.title, "");
-        this.icon = utils.maybeObservable(options.icon, "icon-base");
-        this.selected = utils.maybeObservable(options.selected, false);
-        this.autoclose = utils.maybeObservable(options.autoclose, false);
+        this.title = maybeObservable(options.title, "");
+        this.icon = maybeObservable(options.icon, "icon-base");
+        this.selected = maybeObservable(options.selected, false);
+        this.autoclose = maybeObservable(options.autoclose, false);
         this.click = options.click || function () { return null; };
     }
 }
@@ -483,7 +493,7 @@ export class RibbonList extends RibbonItem {
     constructor(items: any) {
         super({});
 
-        this.items = utils.createObservableArray(items, RibbonItem.create);
+        this.items = createObservableArray(items, RibbonItem.create);
     }
 }
 
@@ -501,8 +511,8 @@ export class RibbonListItem extends RibbonItem {
     constructor(options: RibbonListItemOptions) {
         super(options);
 
-        this.title = utils.createObservable(options.title, "");
-        this.icon = utils.createObservable(options.icon, "icon-list-base");
+        this.title = createObservable(options.title, "");
+        this.icon = createObservable(options.icon, "icon-list-base");
         this.click = options.click || function () { return null; };
     }
 }
@@ -523,8 +533,8 @@ export class RibbonForm extends RibbonItem {
     constructor(items: any, inline?: any) {
         super({});
         
-        this.items = utils.createObservableArray(items, RibbonItem.create);
-        this.inline = utils.maybeObservable(inline, false);
+        this.items = createObservableArray(items, RibbonItem.create);
+        this.inline = maybeObservable(inline, false);
     }
 }
 
@@ -562,12 +572,12 @@ export class RibbonInput extends RibbonItem {
     constructor(options: RibbonInputOptions) {
         super(options);
         
-        this.label = utils.maybeObservable(options.label, "");
-        this.icon = utils.maybeObservable(options.icon, "");
-        this.type = utils.maybeObservable(options.type, "text");
-        this.value = utils.createObservable(options.value);
-        this.event = utils.maybeObservable(options.event);
-        this.on = utils.maybeObservable(options.on);
+        this.label = maybeObservable(options.label, "");
+        this.icon = maybeObservable(options.icon, "");
+        this.type = maybeObservable(options.type, "text");
+        this.value = createObservable(options.value);
+        this.event = maybeObservable(options.event);
+        this.on = maybeObservable(options.on);
 
         options.options && (this.options = options.options);
         options.optionsText && (this.optionsText = options.optionsText);
@@ -594,8 +604,8 @@ export class RibbonCheckbox extends RibbonItem {
     constructor(options: RibbonCheckboxOptions) {
         super(options);
         
-        this.label = utils.maybeObservable(options.label);
-        this.checked = utils.maybeObservable(options.checked, false);
+        this.label = maybeObservable(options.label);
+        this.checked = maybeObservable(options.checked, false);
     }
 }
 
@@ -623,12 +633,12 @@ export class RibbonSlider extends RibbonItem {
     constructor(options: RibbonSliderOptions) {
         super(options);
         
-        this.label = utils.maybeObservable(options.label);
-        this.icon = utils.maybeObservable(options.icon);
-        this.min = utils.maybeObservable(options.min, 0);
-        this.max = utils.maybeObservable(options.max, 1);
-        this.step = utils.maybeObservable(options.step, 0.05);
-        this.value = utils.maybeObservable(options.value);
+        this.label = maybeObservable(options.label);
+        this.icon = maybeObservable(options.icon);
+        this.min = maybeObservable(options.min, 0);
+        this.max = maybeObservable(options.max, 1);
+        this.step = maybeObservable(options.step, 0.05);
+        this.value = maybeObservable(options.value);
     }
 }
 
@@ -712,7 +722,7 @@ ko.bindingHandlers.ribbonpop = {
     }
 };
 
-createTemplatedBindingHandler("ribbon", {
+createTemplatedHandler("ribbon", {
     create() {
         const
             root = createRoot(),
@@ -743,11 +753,11 @@ createTemplatedBindingHandler("ribbon", {
         $(element).addClass("ribbon");
     },
     update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        renderCached("ribbon", element, element["_ribbon"], bindingContext);
+        renderTemplateCached("ribbon", element, element["_ribbon"], bindingContext);
     }
 });
 
-createTemplatedBindingHandler("ribbonpage", {
+createTemplatedHandler("ribbonpage", {
     create() {
         const root = createRoot();
 
@@ -776,7 +786,7 @@ createTemplatedBindingHandler("ribbonpage", {
     }
 });
 
-createTemplatedBindingHandler("ribbongroup", {
+createTemplatedHandler("ribbongroup", {
     create() {
         const root = createRoot();
 
@@ -812,7 +822,7 @@ ko.bindingHandlers.ribbonitem = {
     }
 };
 
-createTemplatedBindingHandler("ribbonlist", {
+createTemplatedHandler("ribbonlist", {
     create() {
         const 
             root = createRoot(),
@@ -827,7 +837,7 @@ createTemplatedBindingHandler("ribbonlist", {
     }
 });
 
-createTemplatedBindingHandler("ribbonform", {
+createTemplatedHandler("ribbonform", {
     create() {
         const 
             root = createRoot(),
@@ -842,7 +852,7 @@ createTemplatedBindingHandler("ribbonform", {
     }
 });
 
-createTemplatedBindingHandler("ribbonflyout", {
+createTemplatedHandler("ribbonflyout", {
     create() {
         const 
             root = createRoot(),
@@ -860,7 +870,7 @@ createTemplatedBindingHandler("ribbonflyout", {
     update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         const flyout = ko.unwrap(valueAccessor()) as RibbonFlyout;
             
-        renderCached("ribbonflyout", element, flyout, bindingContext, "ribbonflyout", { afterRender });
+        renderTemplateCached("ribbonflyout", element, flyout, bindingContext, "ribbonflyout", { afterRender });
 
         function afterRender(nodes: [HTMLButtonElement, HTMLElement]) {
             flyout.init(nodes[0], bindingContext);
@@ -868,7 +878,7 @@ createTemplatedBindingHandler("ribbonflyout", {
     }
 });
 
-createTemplatedBindingHandler("ribbonbutton", {
+createTemplatedHandler("ribbonbutton", {
     create() {
         const 
             root = createRoot(),
@@ -884,7 +894,7 @@ createTemplatedBindingHandler("ribbonbutton", {
     }
 });
 
-createTemplatedBindingHandler("ribboncheckbox", {
+createTemplatedHandler("ribboncheckbox", {
     create() {
         const 
             root = createRoot(),
@@ -900,7 +910,7 @@ createTemplatedBindingHandler("ribboncheckbox", {
     }
 });
 
-createTemplatedBindingHandler("ribbonslider", {
+createTemplatedHandler("ribbonslider", {
     create() {
         const root = createRoot();
 
@@ -996,80 +1006,6 @@ ko.bindingHandlers.ribboninput = {
 //#endregion
 
 //#region Private Methods 
-
-const TMPL_COMPUTED_DOM_DATA_KEY = "__KOUI_TEMPLATE_COMPUTED__";
-
-export interface TemplatedBindingHandler extends ko.BindingHandler {
-    template?: Element;
-    create(): Element;
-    beforeUpdate?(): void;
-}
-
-function createTemplatedBindingHandler(name: string, bindingHandler: TemplatedBindingHandler) {
-    const 
-        oldInit = bindingHandler.init,
-        beforeUpdate = bindingHandler.beforeUpdate;
-    
-    bindingHandler.init = function() {
-        oldInit && oldInit.apply(this, arguments);
-        
-        if (!bindingHandler.template) {
-            let template = bindingHandler.template = bindingHandler.create();
-            new ko.templateSources.anonymousTemplate(template).nodes(template);
-        }
-        
-        return { controlsDescendantBindings: true };
-    };
-    
-    if (!bindingHandler.update) {
-        bindingHandler.update = function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            beforeUpdate && beforeUpdate.apply(this, arguments);
-            
-            const 
-                data = ko.unwrap(valueAccessor()),
-                
-                templateComputed = ko.renderTemplate(
-                    data.template || bindingHandler.template,
-                    bindingContext.createChildContext(data, name),
-                    {},
-                    element
-                );
-                
-            disposeOldComputedAndStoreNewOne(element, templateComputed);
-        };
-    }
-    
-    ko.bindingHandlers[name] = bindingHandler;
-}
-
-function renderTemplate(template: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>, root?: Node) {
-    const element = root || template;
-    const templateComputed = ko.renderTemplate(template, bindingContext.createChildContext(data, dataAlias), options || {}, element);
-    disposeOldComputedAndStoreNewOne(element, templateComputed);
-}
-
-function renderCached(handler: string, element: Node, data: any, bindingContext: ko.BindingContext<any>, dataAlias?: string, options?: ko.TemplateOptions<any>) {
-    const 
-        hndl = ko.bindingHandlers[handler] as TemplatedBindingHandler,
-        templateComputed = ko.renderTemplate(
-            hndl.template, 
-            bindingContext.createChildContext(data, dataAlias || handler), 
-            options || {}, 
-            element
-        );
-        
-    disposeOldComputedAndStoreNewOne(element, templateComputed);
-}
-
-function disposeOldComputedAndStoreNewOne(element: Node, newComputed: ko.Computed<any>) { 
-    const oldComputed = ko.utils.domData.get(element, TMPL_COMPUTED_DOM_DATA_KEY);
-     
-    if (oldComputed && typeof oldComputed.dispose === "function") {
-        oldComputed.dispose();
-    }
-    
-    ko.utils.domData.set(element, TMPL_COMPUTED_DOM_DATA_KEY, (newComputed && newComputed.isActive()) ? newComputed : undefined); 
-} 
 
 function getRibbonItemHandler(item: any): string {
     if (item instanceof RibbonButton) {
