@@ -13,7 +13,7 @@ import {
     prefixStyle
 } from "./utils";
 
-type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
+export type MaybeSubscribable<T> = ko.MaybeSubscribable<T>;
 
 declare module "knockout" {
     export interface BindingHandlers {
@@ -29,10 +29,11 @@ declare module "knockout" {
 } 
 
 export interface SliderOptions {
-    value?: any;
-    min?: any;
-    max?: any;
-    step?: any;
+    value?: MaybeSubscribable<number>;
+    min?: MaybeSubscribable<number>;
+    max?: MaybeSubscribable<number>;
+    step?: MaybeSubscribable<number>;
+    onchange?: (value: number, slider: Slider) => void;
 }
 
 export class Slider {
@@ -50,9 +51,8 @@ export class Slider {
     public step: MaybeSubscribable<number>;
     public coef: ko.Computed<number>;
     public position: ko.Computed<number>;
+    public onchange: (value: number, slider: Slider) => void;
 
-    public static isSlidding: Slider = null;
-    
     constructor(value: number);
     constructor(value: ko.Subscribable<number>);
     constructor(options: SliderOptions);
@@ -64,6 +64,7 @@ export class Slider {
         this.min = maybeObservable(options.min, 0);
         this.max = maybeObservable(options.max, 1);
         this.step = maybeObservable(options.step, 0.01);
+        this.onchange = options.onchange;
 
         this.coef = ko.pureComputed<number>({
             read: function () {
@@ -87,7 +88,9 @@ export class Slider {
                 if (min !== 0 || max !== 1)
                     newCoef = ((max - min) * newCoef) + min;
 
-                this.value(getBestStep(newCoef, step));
+                const val = getBestStep(newCoef, step);
+                this.onchange && this.onchange(val, this);
+                this.value(val);
             },
             owner: this
         });
@@ -128,7 +131,6 @@ export class Slider {
 
     public onMouseDown(e: MouseEvent): void {
         this.isMouseDown = true;
-        Slider.isSlidding = this;
 
         const pos = this.getRelativePosition(e.pageX, e.pageY);
         this.position(pos.x);
@@ -150,7 +152,6 @@ export class Slider {
     }
     public onMouseUp(): void {
         this.isMouseDown = false;
-        Slider.isSlidding = null;
         
         $(document.body).css(prefixStyle("userSelect"), "");
         $(document).off({

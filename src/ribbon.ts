@@ -1,3 +1,4 @@
+import "./slider";
 import * as ko from "knockout";
 import * as $ from "jquery";
 import { Slider } from "./slider";
@@ -410,6 +411,8 @@ export class RibbonFlyout extends RibbonItem {
         RibbonFlyout.registerDocument();
     }
     
+    static slidingElement: Element;
+    
     static registerDocument(): void {
         if (RibbonFlyout._isDocRegistered) {
             return;
@@ -423,9 +426,10 @@ export class RibbonFlyout extends RibbonItem {
     private static _onDocumentClick(e: MouseEvent) {
         let parents = RibbonFlyout.getAllHosts(e.target as Node);
         
-        const slider = Slider.isSlidding;
-        if (slider) {
-            parents = parents.concat(RibbonFlyout.getAllHosts(slider.element));
+        const slidingElement = RibbonFlyout.slidingElement;
+        if (slidingElement) {
+            parents = parents.concat(RibbonFlyout.getAllHosts(slidingElement));
+            RibbonFlyout.slidingElement = null;
         }
         
         if (parents.length === 0) {
@@ -658,11 +662,17 @@ export class RibbonSlider extends RibbonItem {
         this.step = maybeObservable(options.step, 0.05);
         this.value = maybeObservable(options.value);
     }
+    
+    public onchange(value: number, slider: Slider): void {
+        RibbonFlyout.slidingElement = slider.element;
+    }
 }
 
 //#endregion
 
 //#region Handlers
+
+const handlers = ko.bindingHandlers;
 
 declare module "knockout" {
     export interface BindingHandlers {
@@ -689,7 +699,7 @@ declare module "knockout" {
 } 
 
 const RIBBON_CLASSES_KEY = "__RIBBON_CLASSES_KEY__";
-ko.bindingHandlers.ribbonclass = {
+handlers.ribbonclass = {
     update(element, valueAccessor): void {
         const value = String(ko.unwrap(valueAccessor()) || "").trim();
         
@@ -701,7 +711,7 @@ ko.bindingHandlers.ribbonclass = {
     }
 };
 
-ko.bindingHandlers.ribbonpop = {
+handlers.ribbonpop = {
     init(element, valueAccessor): void {
         const 
             $element = $(element),
@@ -821,16 +831,12 @@ createTemplatedHandler("ribbongroup", {
     }
 });
 
-ko.bindingHandlers.ribbonitem = {
+handlers.ribbonitem = {
     init(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         const
             data = ko.unwrap(valueAccessor()) as RibbonItem,
             handler = getRibbonItemHandler(data);
-            
-        if (!handler) {
-            return;
-        }
-            
+
         const root = document.createElement("div");
         const el = document.createElement(element.tagName);
         el.setAttribute("class", element.getAttribute("class"));
@@ -845,7 +851,7 @@ ko.bindingHandlers.ribbonitem = {
     }
 };
 
-ko.bindingHandlers.ribbonitembase = {
+handlers.ribbonitembase = {
     init(element, valueAccessor) {
         const data = ko.unwrap(valueAccessor());
         return { controlsDescendantBindings: !!ko.unwrap(data.template) };
@@ -963,7 +969,7 @@ createTemplatedHandler("ribbonslider", {
         const root = createRoot();
 
         $("<label>").addClass("ribbon-label").attr("data-bind", "text: label, ribbonclass: icon").appendTo(root);
-        $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value }").appendTo(root);
+        $("<div>").addClass("ribbon-slider-handle").attr("data-bind", "slider: { min: min, max: max, step: step, value: value, onchange: onchange }").appendTo(root);
 
         return root;
     },
@@ -972,7 +978,7 @@ createTemplatedHandler("ribbonslider", {
     }
 });
 
-ko.bindingHandlers.ribboninput = {
+handlers.ribboninput = {
     init(element, valueAccessor) {
         const
             input = ko.unwrap(valueAccessor()),
