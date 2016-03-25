@@ -378,6 +378,111 @@ export module specials {
     }
 }
 
+export module separators {
+    
+    export function createSeparatorFlyout() {
+        return {
+            __: "flyout",
+            title: "Flyout separators",
+            icon: getRandomIcon(),
+            content: [
+                {
+                    __: "list",
+                    content: [
+                        {
+                            __: "checkbox",
+                            label: "Checkbox (item)",
+                            value: ko.observable(false)
+                        },
+                        { css: "ribbon-separator" }, 
+                        {
+                            __: "input",
+                            type: "checkbox",
+                            label: "Checkbox (input)",
+                            value: ko.observable(true)
+                        }
+                    ]
+                }, 
+                { css: "ribbon-separator" }, 
+                {
+                    __: "form",
+                    content: [
+                        {
+                            __: "input",
+                            icon: getRandomIcon(),
+                            value: ko.observable("value")
+                        }, 
+                        { css: "ribbon-separator" }, 
+                        {
+                            __: "input",
+                            type: "checkbox",
+                            label: "Checkbox (input)",
+                            value: ko.observable(true)
+                        }
+                    ]
+                }, 
+                { css: "ribbon-separator" }, 
+                {
+                    __: "form",
+                    content: [
+                        {
+                            __: "form",
+                            inline: true,
+                            content: [
+                                {
+                                    __: "input",
+                                    value: ko.observable(),
+                                    class: "ribbon-medium-text",
+                                    attr: {
+                                        placeholder: "Enter some value"
+                                    }
+                                }
+                            ]
+                        },
+                        { css: "ribbon-separator" }, 
+                        {
+                            __: "form",
+                            inline: true,
+                            content: [
+                                {
+                                    __: "input",
+                                    type: "select",
+                                    value: ko.observable("value-3"),
+                                    optionsText: "text",
+                                    optionsValue: "value",
+                                    options: [
+                                        { text: "Value #1", value: "value-1" },
+                                        { text: "Value #2", value: "value-2" },
+                                        { text: "Value #3", value: "value-3" },
+                                        { text: "Value #4", value: "value-4" }
+                                    ]
+                                },
+                                { css: "ribbon-separator" }, 
+                                {
+                                    __: "input",
+                                    type: "number",
+                                    value: ko.observable(100)
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+    
+    export function createSeparatorGroup() {
+        return {
+            title: "Separators", 
+            content: [
+                buttons.createButtons(1)[0],
+                { css: "ribbon-separator" },
+                createSeparatorFlyout()
+            ]
+        };
+    }
+}
+
 export const ribbon = new Ribbon({
     backButtonIcon: "fa fa-arrow-left",
     isCollapsed: false,
@@ -432,6 +537,7 @@ export const ribbon = new Ribbon({
             title: "Special page",
             special: true,
             groups: specials.createSpecialGroups()
+                .concat([separators.createSeparatorGroup()])
         }
     ]
 });
