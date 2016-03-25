@@ -4,13 +4,15 @@
 @ribbon-size: 120px;
 @ribbon-collapsed-size: 30px;
 
+@ribbon-zindex: 99;
 @ribbon-line-height: 28px;
 
 @ribbon-group-padding: 5px;
+@ribbon-group-border-color: #abc;
 
 .ribbon {
     height: @ribbon-size;
-    z-index: 99;
+    z-index: @ribbon-zindex;
     
     &-hidden {
         display: none !important;
@@ -20,7 +22,7 @@
         display: inline-block;
         width: 0;
         height: 100%;
-        border: solid 0 #abc;
+        border: solid 0 @ribbon-group-border-color;
         border-right-width: 1px;
         
         .ribbon-group & {
@@ -37,7 +39,7 @@
             &:before {
                 position: absolute;
                 height: 95%;
-                border-right: solid 1px #abc;
+                border-right: solid 1px @ribbon-group-border-color;
                 content: "";
             }
         }
@@ -57,7 +59,7 @@
             padding: 0;
             margin: (@ribbon-line-height / 10) (@ribbon-line-height / 4) !important;
             height: (@ribbon-line-height / 1.25) !important;
-            border-right: solid 1px #abc;
+            border-right: solid 1px @ribbon-group-border-color;
         }
     }
 
@@ -261,7 +263,7 @@
         height: 80px;
         padding: 0 @ribbon-group-padding;
         margin: 5px 0;
-        border-right: solid 1px #abc;
+        border-right: solid 1px @ribbon-group-border-color;
         vertical-align: top;
         
         &-container {
