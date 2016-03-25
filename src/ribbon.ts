@@ -269,8 +269,10 @@ export class RibbonItem {
         if (item instanceof RibbonItem) {
             return item;
         }
-
-        switch (item.__.toLowerCase()) {
+        
+        const type = item.__ ? item.__.toLowerCase() : "";
+        
+        switch (type) {
             case "button":
                 return new RibbonButton(item);
                 
@@ -294,7 +296,7 @@ export class RibbonItem {
                 return new RibbonSlider(item);
                 
             default:
-                throw "unknown type";
+                return new RibbonItem(item);
         }
     }
     
@@ -675,6 +677,7 @@ declare module "knockout" {
         ribbonpage: TemplatedBindingHandler;
         ribbongroup: TemplatedBindingHandler;
         ribbonitem: BindingHandler;
+        ribbonitembase: BindingHandler;
         ribbonlist: TemplatedBindingHandler;
         ribbonform: TemplatedBindingHandler;
         ribbonflyout: TemplatedBindingHandler;
@@ -824,6 +827,10 @@ ko.bindingHandlers.ribbonitem = {
             data = ko.unwrap(valueAccessor()) as RibbonItem,
             handler = getRibbonItemHandler(data);
             
+        if (!handler) {
+            return;
+        }
+            
         const root = document.createElement("div");
         const el = document.createElement(element.tagName);
         el.setAttribute("class", element.getAttribute("class"));
@@ -835,6 +842,31 @@ ko.bindingHandlers.ribbonitem = {
         ko.renderTemplate(element, bindingContext, {}, element, "replaceNode");
         
         return { controlsDescendantBindings: true };
+    }
+};
+
+ko.bindingHandlers.ribbonitembase = {
+    init(element, valueAccessor) {
+        const data = ko.unwrap(valueAccessor());
+        return { controlsDescendantBindings: !!ko.unwrap(data.template) };
+    },
+    update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        const
+            data = ko.unwrap(valueAccessor()),
+            template = ko.unwrap(data.template);
+            
+        if (!template) {
+            return;
+        }
+            
+        renderTemplate(
+            template,
+            data.data,
+            bindingContext,
+            "item",
+            {},
+            element
+        );
     }
 };
 
@@ -1027,24 +1059,32 @@ function getRibbonItemHandler(item: any): string {
     if (item instanceof RibbonButton) {
         return "ribbonbutton";
     }
-    else if (item instanceof RibbonList) {
+    
+    if (item instanceof RibbonList) {
         return "ribbonlist";
     }
-    else if (item instanceof RibbonForm) {
+    
+    if (item instanceof RibbonForm) {
         return "ribbonform";
     }
-    else if (item instanceof RibbonInput) {
+    
+    if (item instanceof RibbonInput) {
         return "ribboninput";
     }
-    else if (item instanceof RibbonCheckbox) {
+    
+    if (item instanceof RibbonCheckbox) {
         return "ribboncheckbox";
     }
-    else if (item instanceof RibbonFlyout) {
+    
+    if (item instanceof RibbonFlyout) {
         return "ribbonflyout";
     }
-    else if (item instanceof RibbonSlider) {
+    
+    if (item instanceof RibbonSlider) {
         return "ribbonslider";
     }
+    
+    return "ribbonitembase";
 }
 
 function stopEvent(e: JQueryEventObject) {

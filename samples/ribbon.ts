@@ -251,20 +251,36 @@ export module specials {
         return { title, template };
     }
     
-    export function createItemGroup(template = "ribbon-test-item") {
+    export function createItemTemplateGroup(template = "ribbon-test-item") {
+        return {
+            title: "Item Template",
+            content: [
+                {
+                    template,
+                    data: {
+                        text: "Some text data"
+                    }
+                }
+            ]
+        };
+    }
+    
+    export function createInputTemplateGroup(template = "ribbon-test-input") {
         return {
             title: "Item Template",
             content: [
                 {
                     __: "input",
                     value: ko.observable("Some value"),
-                    template: "ribbon-test-item"
+                    template
                 }
             ]
         };
     }
     
-    export function createFlyoutGroup(template = "ribbon-test-flyout") {
+    
+    
+    export function createFlyoutTemplateGroup(template = "ribbon-test-flyout") {
         return {
             title: "Flyout Template",
             content: [
@@ -354,8 +370,9 @@ export module specials {
     export function createSpecialGroups() {
         return [
             createTemplateGroup(),
-            createItemGroup(),
-            createFlyoutGroup(),
+            createItemTemplateGroup(),
+            createInputTemplateGroup(),
+            createFlyoutTemplateGroup(),
             createCustomBindingGroup()
         ].concat(createShowHideGroups());
     }
