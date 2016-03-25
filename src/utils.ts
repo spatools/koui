@@ -50,6 +50,18 @@ export function createObservableArray(value: any, mapFunction?: (obj: any) => an
     return ko.observableArray(value);
 }
 
+/** Return a computed Array from value (or _default if undefined). If value is subscribable, returns value directly. */
+export function createComputedArray<T>(value: MaybeSubscribable<any[]>, mapFunction?: (obj: any) => T, context?: any): ko.PureComputed<T[]> {
+    return ko.pureComputed(() => {
+        const val = ko.unwrap(value);
+        if (!Array.isArray(val)) {
+            return [];
+        }
+        
+        return val.map(mapFunction, context);
+    });
+}
+
 export function maybeObservable<T>(value: MaybeSubscribable<T>, _default?: T): MaybeSubscribable<T> {
     if (typeof value === "undefined" || value === null) {
         return _default;
@@ -137,12 +149,17 @@ export function createTemplatedHandler(name: string, bindingHandler: TemplatedBi
         oldInit = bindingHandler.init,
         beforeUpdate = bindingHandler.beforeUpdate;
     
-    bindingHandler.init = function() {
+    bindingHandler.init = function(element, valueAccessor) {
         oldInit && oldInit.apply(this, arguments);
         
         if (!bindingHandler.template) {
             let template = bindingHandler.template = bindingHandler.create();
             new ko.templateSources.anonymousTemplate(template).nodes(template);
+        }
+        
+        const data = ko.unwrap(valueAccessor());
+        if (typeof data.dispose === "function") {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, data.dispose.bind(data));
         }
         
         return { controlsDescendantBindings: true };

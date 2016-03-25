@@ -9,6 +9,7 @@ import {
     bindAll,
     createObservable,
     createObservableArray,
+    createComputedArray,
     maybeObservable,
     createTemplatedHandler,
     renderTemplate,
@@ -145,6 +146,10 @@ export class Ribbon {
             return new Ribbon(ribbon);
         }
     }
+    
+    public dispose() {
+        this.pages().forEach(p => { p.dispose(); });
+    }
 }
 
 //#endregion
@@ -161,14 +166,14 @@ export interface RibbonPageOptions {
 export class RibbonPage {
     title: MaybeSubscribable<string>;
     special: MaybeSubscribable<boolean>;
-    groups: ko.ObservableArray<RibbonGroup>;
+    groups: ko.PureComputed<RibbonGroup[]>;
     pop: ko.Observable<boolean>;
 
     constructor(options: RibbonPageOptions) {
         this.title = maybeObservable(options.title, "Page Title");
         this.special = maybeObservable(options.special, false);
         this.pop = createObservable(options.pop, false);
-        this.groups = createObservableArray(options.groups, RibbonGroup.create);
+        this.groups = createComputedArray(options.groups, RibbonGroup.create);
     }
 
     public show(): void {
@@ -182,6 +187,11 @@ export class RibbonPage {
         else {
             return new RibbonPage(page);
         }
+    }
+    
+    public dispose() {
+        this.groups().forEach(g => { g.dispose(); });
+        this.groups.dispose();
     }
 }
 
@@ -208,7 +218,7 @@ export class RibbonGroup {
     icon: MaybeSubscribable<string>;
     css: MaybeSubscribable<string | Object>;
     template: MaybeSubscribable<string>;
-    content: ko.ObservableArray<RibbonItem>;
+    content: ko.PureComputed<RibbonItem[]>;
 
     constructor(options: RibbonGroupOptions) {
         this.title = maybeObservable(options.title, "");
@@ -218,7 +228,7 @@ export class RibbonGroup {
         this.icon = maybeObservable(options.icon, "icon-base");
         this.css = maybeObservable(options.css);
         this.template = maybeObservable(options.template);
-        this.content = createObservableArray(options.content, RibbonItem.create);
+        this.content = createComputedArray(options.content, RibbonItem.create);
     }
     
     static create(group: RibbonGroup | RibbonGroupOptions): RibbonGroup {
@@ -228,6 +238,11 @@ export class RibbonGroup {
         else {
             return new RibbonGroup(group);
         }
+    }
+    
+    public dispose() {
+        this.content().forEach(i => { i.dispose(); });
+        this.content.dispose();
     }
 }
 
@@ -250,6 +265,8 @@ export class RibbonItem {
     visible: MaybeSubscribable<boolean>;
     template: MaybeSubscribable<string | Node>;
     
+    protected _disposable: Disposable[] = [];
+    
     constructor(options: RibbonItemOptions) {
         this.data = options.data || {};
         this.bindings = options.bindings || {};
@@ -264,6 +281,10 @@ export class RibbonItem {
         return "css: css, visible: visible" +
             (bindings.length ? ", " : "") +
             bindings.map(b => `${b}: bindings.${b}`).join(", ");
+    }
+    
+    protected addDisposable(disp: Disposable) {
+        this._disposable.push(disp);
     }
     
     static create(item: any): RibbonItem {
@@ -309,6 +330,68 @@ export class RibbonItem {
             return array.map(RibbonItem.create);
         }
     }
+    
+    public dispose() {
+        this._disposable.forEach(d => { d.dispose(); });
+    }
+}
+
+//#endregion
+
+//#region Ribbon Form 
+
+export interface RibbonFormOptions extends RibbonItemOptions {
+    items?: MaybeSubscribable<RibbonItem[]>;
+    inline?: MaybeSubscribable<boolean>;
+}
+
+export class RibbonForm extends RibbonItem {
+    items: ko.PureComputed<RibbonItem[]>;
+    inline: MaybeSubscribable<boolean>;
+
+    constructor(items: MaybeSubscribable<RibbonItem[]>, inline?: MaybeSubscribable<boolean>) {
+        super({});
+        
+        this.items = createComputedArray(items, RibbonItem.create);
+        this.inline = maybeObservable(inline, false);
+        
+        this.addDisposable(this.items);
+    }
+}
+
+//#endregion
+
+//#region Ribbon List 
+
+export class RibbonList extends RibbonItem {
+    public items: ko.PureComputed<RibbonItem[]>;
+
+    constructor(items: MaybeSubscribable<RibbonItem[]>) {
+        super({});
+
+        this.items = createComputedArray(items, RibbonItem.create);
+        this.addDisposable(this.items);
+    }
+}
+
+export interface RibbonListItemOptions extends RibbonItemOptions {
+    title?: MaybeSubscribable<string>;
+    icon?: MaybeSubscribable<string>;
+    click?: () => any;
+}
+
+export class RibbonListItem extends RibbonItem {
+    title: MaybeSubscribable<string>;
+    icon: MaybeSubscribable<string>;
+    click: () => any;
+
+    constructor(options: RibbonListItemOptions) {
+        super(options);
+
+        this.title = createObservable(options.title, "");
+        this.icon = createObservable(options.icon, "icon-list-base");
+        this.click = options.click || function () { return null; };
+    }
 }
 
 //#endregion
@@ -320,7 +403,7 @@ export interface RibbonFlyoutOptions extends RibbonItemOptions {
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
     contentTemplate?: MaybeSubscribable<string>;
-    content?: any;
+    content?: MaybeSubscribable<RibbonItem[]>;
 }
 
 export class RibbonFlyout extends RibbonItem {
@@ -333,7 +416,7 @@ export class RibbonFlyout extends RibbonItem {
     icon: MaybeSubscribable<string>;
     selected: MaybeSubscribable<boolean>;
     contentTemplate: MaybeSubscribable<string>;
-    content: ko.ObservableArray<RibbonItem>;
+    content: ko.PureComputed<RibbonItem[]>;
 
     constructor(options: RibbonFlyoutOptions) {
         super(options);
@@ -342,8 +425,10 @@ export class RibbonFlyout extends RibbonItem {
         this.icon = maybeObservable(options.icon, "icon-base");
         this.selected = maybeObservable(options.selected, false);
         this.contentTemplate = maybeObservable(options.contentTemplate);
-        this.content = createObservableArray(options.content, RibbonItem.create);
-        
+
+        this.content = createComputedArray(options.content, RibbonItem.create);
+        this.addDisposable(this.content);
+
         bindAll(this, "click", "position");
     }
     
@@ -418,7 +503,7 @@ export class RibbonFlyout extends RibbonItem {
             return;
         }
         
-        doc.addEventListener("mouseup", RibbonFlyout._onDocumentClick, true);
+        doc.addEventListener("click", RibbonFlyout._onDocumentClick, true);
         RibbonFlyout._isDocRegistered = true;
     }
 
@@ -435,7 +520,7 @@ export class RibbonFlyout extends RibbonItem {
         if (parents.length === 0) {
             $(".ribbon-flyout-popup").remove();
             
-            doc.removeEventListener("mouseup", RibbonFlyout._onDocumentClick, true);
+            doc.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
             RibbonFlyout._isDocRegistered = false;
             
             return;
@@ -507,58 +592,7 @@ export class RibbonButton extends RibbonItem {
 
 //#endregion
 
-//#region Ribbon List 
-
-export class RibbonList extends RibbonItem {
-    public items: ko.ObservableArray<RibbonItem>;
-
-    constructor(items: any) {
-        super({});
-
-        this.items = createObservableArray(items, RibbonItem.create);
-    }
-}
-
-export interface RibbonListItemOptions extends RibbonItemOptions {
-    title?: MaybeSubscribable<string>;
-    icon?: MaybeSubscribable<string>;
-    click?: () => any;
-}
-
-export class RibbonListItem extends RibbonItem {
-    title: MaybeSubscribable<string>;
-    icon: MaybeSubscribable<string>;
-    click: () => any;
-
-    constructor(options: RibbonListItemOptions) {
-        super(options);
-
-        this.title = createObservable(options.title, "");
-        this.icon = createObservable(options.icon, "icon-list-base");
-        this.click = options.click || function () { return null; };
-    }
-}
-
-//#endregion
-
-//#region Ribbon Form 
-
-export interface RibbonFormOptions extends RibbonItemOptions {
-    items?: ko.ObservableArray<RibbonItem>;
-    inline?: MaybeSubscribable<boolean>;
-}
-
-export class RibbonForm extends RibbonItem {
-    items: ko.ObservableArray<RibbonItem>;
-    inline: MaybeSubscribable<boolean>;
-
-    constructor(items: any, inline?: any) {
-        super({});
-        
-        this.items = createObservableArray(items, RibbonItem.create);
-        this.inline = maybeObservable(inline, false);
-    }
-}
+//#region Ribbon Input 
 
 export interface RibbonInputOptions extends RibbonItemOptions {
     label?: MaybeSubscribable<string>;
@@ -854,6 +888,11 @@ handlers.ribbonitem = {
 handlers.ribbonitembase = {
     init(element, valueAccessor) {
         const data = ko.unwrap(valueAccessor());
+        
+        if (typeof data.dispose === "function") {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, () => { data.dispose(); });
+        }
+        
         return { controlsDescendantBindings: !!ko.unwrap(data.template) };
     },
     update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
@@ -981,7 +1020,7 @@ createTemplatedHandler("ribbonslider", {
 handlers.ribboninput = {
     init(element, valueAccessor) {
         const
-            input = ko.unwrap(valueAccessor()),
+            input = ko.unwrap(valueAccessor()) as RibbonInput,
             label = ko.unwrap(input.label),
             icon = ko.unwrap(input.icon),
             $container = $("<div>");
@@ -1049,6 +1088,9 @@ handlers.ribboninput = {
         $inputElement.appendTo(type === "checkbox" && $label ? $label : $container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
+
+        ko.utils.domNodeDisposal.addDisposeCallback(element, input.dispose.bind(input));
+
         return { controlsDescendantBindings: true };
     },
     update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {

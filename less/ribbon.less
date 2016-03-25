@@ -130,11 +130,14 @@
         }
 
         label {
-            display: inline-block;
             min-width: 16px;
             margin-right: 5px;
             font-size: 0.8em;
-            vertical-align: middle;
+            
+            &, & > span {
+                display: inline-block;
+                vertical-align: middle;
+            }
             
             &:before {
                 font-size: 16px;

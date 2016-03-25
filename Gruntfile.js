@@ -151,7 +151,7 @@ module.exports = function (grunt) {
     //#region Clean
 
     config.clean = {
-        dist: "<%= paths.build %>",
+        dist: "<%= paths.build %>/**",
         temp: "<%= paths.temp %>",
         dev: [
             "<%= paths.css %>/**/*.css",
