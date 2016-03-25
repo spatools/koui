@@ -264,6 +264,21 @@ export module specials {
         };
     }
     
+    export function createFlyoutGroup(template = "ribbon-test-flyout") {
+        return {
+            title: "Flyout Template",
+            content: [
+                {
+                    __: "flyout",
+                    icon: getRandomIcon(),
+                    title: "Templated flyout",
+                    contentTemplate: "ribbon-test-flyout",
+                    data: { value: ko.observable("Try some value...") }
+                }
+            ]
+        };
+    }
+    
     export function createShowHideGroups() {
         const 
             group = createTemplateGroup("Visibility Group"),
@@ -340,6 +355,7 @@ export module specials {
         return [
             createTemplateGroup(),
             createItemGroup(),
+            createFlyoutGroup(),
             createCustomBindingGroup()
         ].concat(createShowHideGroups());
     }

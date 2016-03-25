@@ -234,6 +234,7 @@ export class RibbonGroup {
 
 export interface RibbonItemOptions {
     __?: string;
+    data?: any;
     bindings?: Object;
     class?: MaybeSubscribable<Object | string>; // Backward compatibility
     css?: MaybeSubscribable<Object | string>;
@@ -242,12 +243,14 @@ export interface RibbonItemOptions {
 }
 
 export class RibbonItem {
+    data: any;
     bindings: Object;
     css: MaybeSubscribable<Object | string>;
     visible: MaybeSubscribable<boolean>;
     template: MaybeSubscribable<string | Node>;
     
     constructor(options: RibbonItemOptions) {
+        this.data = options.data || {};
         this.bindings = options.bindings || {};
         this.css = maybeObservable(options.css || options.class);
         this.visible = maybeObservable(options.visible, true);
@@ -313,6 +316,7 @@ export interface RibbonFlyoutOptions extends RibbonItemOptions {
     title?: MaybeSubscribable<string>;
     icon?: MaybeSubscribable<string>;
     selected?: MaybeSubscribable<boolean>;
+    contentTemplate?: MaybeSubscribable<string>;
     content?: any;
 }
 
@@ -325,6 +329,7 @@ export class RibbonFlyout extends RibbonItem {
     title: MaybeSubscribable<string>;
     icon: MaybeSubscribable<string>;
     selected: MaybeSubscribable<boolean>;
+    contentTemplate: MaybeSubscribable<string>;
     content: ko.ObservableArray<RibbonItem>;
 
     constructor(options: RibbonFlyoutOptions) {
@@ -333,6 +338,7 @@ export class RibbonFlyout extends RibbonItem {
         this.title = maybeObservable(options.title, "");
         this.icon = maybeObservable(options.icon, "icon-base");
         this.selected = maybeObservable(options.selected, false);
+        this.contentTemplate = maybeObservable(options.contentTemplate);
         this.content = createObservableArray(options.content, RibbonItem.create);
         
         bindAll(this, "click", "position");
@@ -341,6 +347,10 @@ export class RibbonFlyout extends RibbonItem {
     public init(button: HTMLButtonElement, bindingContext: ko.BindingContext<any>): void {
         this._button = button;
         this._context = bindingContext.createChildContext(this, "ribbonflyout");
+        
+        if (this.contentTemplate) {
+            return;
+        }
         
         const 
             virtual = createRoot(),
@@ -351,11 +361,6 @@ export class RibbonFlyout extends RibbonItem {
         new ko.templateSources.anonymousTemplate(virtual).nodes(virtual);
         
         this._virtual = virtual;
-    }
-    
-    public click() {
-        this.show();
-        RibbonFlyout.registerDocument();
     }
     
     private show() {
@@ -371,7 +376,7 @@ export class RibbonFlyout extends RibbonItem {
         this._host = host;
         
         ko.renderTemplate(
-            this._virtual, 
+            ko.unwrap(this.contentTemplate) || this._virtual, 
             this._context, 
             { afterRender: this.position },
             host
@@ -396,6 +401,11 @@ export class RibbonFlyout extends RibbonItem {
         host.style.left = x + "px";
         host.style.top = y + "px";
         host.style.opacity = "1";
+    }
+    
+    public click() {
+        this.show();
+        RibbonFlyout.registerDocument();
     }
     
     static registerDocument(): void {

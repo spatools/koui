@@ -2,6 +2,7 @@
     .rib-container { position: absolute; left: 0; right: 0; top: 150px; }
     .rib-container h5 { margin: 0; padding: 0; text-align: center; }
     input.ribbon-test-input { width: 150px; }
+    input.ribbon-test-flyout { width: 250px; }
 </style>
 <h2>Ribbon</h2>
 <div class="rib-container">
@@ -14,4 +15,9 @@
 <script id="ribbon-test-item" type="text/html">
     <input class="ribbon-test-input" type="text" data-bind="textInput: value" />
     <h5 data-bind="text: value"></h5>
+</script>
+<script id="ribbon-test-flyout" type="text/html">
+    <h4>Flyout content Template</h4>
+    <input class="ribbon-test-flyout" type="text" data-bind="textInput: data.value" />
+    <h5 data-bind="text: data.value"></h5>
 </script>
