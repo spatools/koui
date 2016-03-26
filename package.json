@@ -1,8 +1,8 @@
 {
   "name": "koui",
-  "version": "0.2.8",
+  "version": "1.0.0",
   "description": "Knockout UI widgets to help Knockout app development",
-  "main": "dist/koui.js",
+  "main": "koui.js",
   "scripts": {
     "postinstall": "bower install && typings install",
     "test": "grunt"

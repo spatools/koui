@@ -1,11 +1,11 @@
 {
   "name": "koui",
-  "version": "0.2.8",
+  "version": "1.0.0",
   "authors": [
     "SPA Tools"
   ],
   "description": "Knockout UI widgets to help Knockout app development",
-  "main": "dist/koui.js",
+  "main": "koui.js",
   "keywords": [
     "knockout",
     "knockoutjs",
