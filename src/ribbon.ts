@@ -101,12 +101,20 @@ export class Ribbon {
 
     public addPage(page: RibbonPage | RibbonPageOptions, special?: boolean): void {
         const newPage = RibbonPage.create(page);
-
-        special && this.removeSpecialPages();
+        
+        if (special) {
+            this.removeSpecialPages();
+            
+            if (page !== newPage) {
+                newPage.autodispose = true;
+            }
+        }
 
         this.pages.push(newPage);
 
-        special && this.selectPage(newPage);
+        if (special) {
+            this.selectPage(newPage);
+        }
     }
 
     public expand(): void {
@@ -126,6 +134,10 @@ export class Ribbon {
 
             if (ko.unwrap(page.special) === true) {
                 this.pages.splice(i, 1);
+                if (page.autodispose) {
+                    page.dispose();
+                }
+
                 pages = this.pages();
                 page = pages[i];
             }
@@ -168,6 +180,8 @@ export class RibbonPage {
     special: MaybeSubscribable<boolean>;
     groups: ko.PureComputed<RibbonGroup[]>;
     pop: ko.Observable<boolean>;
+    
+    autodispose: boolean;
 
     constructor(options: RibbonPageOptions) {
         this.title = maybeObservable(options.title, "Page Title");
@@ -283,7 +297,7 @@ export class RibbonItem {
             bindings.map(b => `${b}: bindings.${b}`).join(", ");
     }
     
-    protected addDisposable(disp: Disposable) {
+    public addDisposable(disp: Disposable) {
         this._disposable.push(disp);
     }
     
@@ -299,17 +313,16 @@ export class RibbonItem {
                 return new RibbonButton(item);
                 
             case "flyout":
-                item.content = RibbonItem.createArray(item.content);
                 return new RibbonFlyout(item);
                 
             case "list":
-                return new RibbonList(RibbonItem.createArray(item.content));
+                return new RibbonList(item);
                 
             case "checkbox":
                 return new RibbonCheckbox(item);
                 
             case "form":
-                return new RibbonForm(RibbonItem.createArray(item.content), item.inline);
+                return new RibbonForm(item);
                 
             case "input":
                 return new RibbonInput(item);
@@ -319,15 +332,6 @@ export class RibbonItem {
                 
             default:
                 return new RibbonItem(item);
-        }
-    }
-    
-    static createArray(array: any): RibbonItem[] | ko.PureComputed<RibbonItem[]> {
-        if (ko.isSubscribable(array) && Array.isArray(array())) {
-            return ko.pureComputed(() => array().map(RibbonItem.create));
-        }
-        else if (Array.isArray(array)) {
-            return array.map(RibbonItem.create);
         }
     }
     
@@ -341,21 +345,21 @@ export class RibbonItem {
 //#region Ribbon Form 
 
 export interface RibbonFormOptions extends RibbonItemOptions {
-    items?: MaybeSubscribable<RibbonItem[]>;
+    content?: MaybeSubscribable<RibbonItem[]>;
     inline?: MaybeSubscribable<boolean>;
 }
 
 export class RibbonForm extends RibbonItem {
-    items: ko.PureComputed<RibbonItem[]>;
+    content: ko.PureComputed<RibbonItem[]>;
     inline: MaybeSubscribable<boolean>;
 
-    constructor(items: MaybeSubscribable<RibbonItem[]>, inline?: MaybeSubscribable<boolean>) {
-        super({});
+    constructor(options: RibbonFormOptions) {
+        super(options);
         
-        this.items = createComputedArray(items, RibbonItem.create);
-        this.inline = maybeObservable(inline, false);
+        this.content = createComputedArray(options.content, RibbonItem.create);
+        this.inline = maybeObservable(options.inline, false);
         
-        this.addDisposable(this.items);
+        this.addDisposable(this.content);
     }
 }
 
@@ -363,14 +367,18 @@ export class RibbonForm extends RibbonItem {
 
 //#region Ribbon List 
 
+export interface RibbonListOptions extends RibbonItemOptions {
+    content?: MaybeSubscribable<RibbonItem[]>;
+}
+
 export class RibbonList extends RibbonItem {
-    public items: ko.PureComputed<RibbonItem[]>;
+    public content: ko.PureComputed<RibbonItem[]>;
 
-    constructor(items: MaybeSubscribable<RibbonItem[]>) {
-        super({});
+    constructor(options: RibbonListOptions) {
+        super(options);
 
-        this.items = createComputedArray(items, RibbonItem.create);
-        this.addDisposable(this.items);
+        this.content = createComputedArray(options.content, RibbonItem.create);
+        this.addDisposable(this.content);
     }
 }
 
@@ -417,6 +425,8 @@ export class RibbonFlyout extends RibbonItem {
     selected: MaybeSubscribable<boolean>;
     contentTemplate: MaybeSubscribable<string>;
     content: ko.PureComputed<RibbonItem[]>;
+    
+    private _isVisible = false;
 
     constructor(options: RibbonFlyoutOptions) {
         super(options);
@@ -444,7 +454,7 @@ export class RibbonFlyout extends RibbonItem {
             virtual = createRoot(),
             $ul = $("<ul>").addClass("ribbon-flyout-content").attr("data-bind", "foreach: content").appendTo(virtual);
             
-        $("<li>").addClass("ribbon-flyout-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
+        addComment($ul.get(0), "ribbonitem: $data, cssclass: 'ribbon-flyout-item'");
         
         new ko.templateSources.anonymousTemplate(virtual).nodes(virtual);
         
@@ -452,6 +462,10 @@ export class RibbonFlyout extends RibbonItem {
     }
     
     private show() {
+        if (this._isVisible) {
+            return;
+        }
+        
         const 
             $host = $("<div>")
                 .addClass("ribbon-content")
@@ -463,12 +477,16 @@ export class RibbonFlyout extends RibbonItem {
         
         this._host = host;
         
+        this._isVisible = true;
+        
         ko.renderTemplate(
             ko.unwrap(this.contentTemplate) || this._virtual, 
             this._context, 
             { afterRender: this.position },
             host
         );
+        
+        ko.utils.domNodeDisposal.addDisposeCallback(host, () => { this._isVisible = false; });
     }
     
     private position() {
@@ -488,7 +506,7 @@ export class RibbonFlyout extends RibbonItem {
             
         host.style.left = x + "px";
         host.style.top = y + "px";
-        host.style.opacity = "1";
+        host.style.opacity = "";
     }
     
     public click() {
@@ -518,7 +536,7 @@ export class RibbonFlyout extends RibbonItem {
         }
         
         if (parents.length === 0) {
-            $(".ribbon-flyout-popup").remove();
+            $(".ribbon-flyout-popup").each((i, el) => { ko.removeNode(el); });
             
             doc.removeEventListener("click", RibbonFlyout._onDocumentClick, true);
             RibbonFlyout._isDocRegistered = false;
@@ -532,7 +550,7 @@ export class RibbonFlyout extends RibbonItem {
         
         $(".ribbon-flyout-popup").each((i, el: HTMLElement) => {
             if (parents.indexOf(el) === -1) {
-                el.parentElement.removeChild(el);
+                ko.removeNode(el);
             }
         });
     }
@@ -730,6 +748,10 @@ declare module "knockout" {
         ribbonslider: TemplatedBindingHandler;
         ribboninput: BindingHandler;
     }
+    
+    export interface VirtualElementsAllowedBindings {
+        ribbonitem: boolean;
+    }
 } 
 
 const RIBBON_CLASSES_KEY = "__RIBBON_CLASSES_KEY__";
@@ -807,13 +829,19 @@ createTemplatedHandler("ribbon", {
         return root;
     },
     init(element, valueAccessor) {
-        const ribbon = element["_ribbon"] = Ribbon.create(ko.unwrap(valueAccessor()));
+        const 
+            val = ko.unwrap(valueAccessor()),
+            ribbon = element["_ribbon"] = Ribbon.create(val);
         
         if (!ko.unwrap(ribbon.selectedPage)) {
             ribbon.selectedPage(ko.unwrap(ribbon.pages)[0]);
         }
         
         $(element).addClass("ribbon");
+        
+        if (val !== ribbon) {
+            ko.utils.domNodeDisposal.addDisposeCallback(element, ribbon.dispose.bind(ribbon));
+        }
     },
     update(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         renderTemplateCached("ribbon", element, element["_ribbon"], bindingContext);
@@ -855,8 +883,8 @@ createTemplatedHandler("ribbongroup", {
 
         $("<h3>").attr("data-bind", "text: title").appendTo(root);
 
-        const $items = $("<ul>").addClass("ribbon-group-content").attr("data-bind", "foreach: { data: content, as: 'item' }").appendTo(root);
-        $("<li>").addClass("ribbon-group-item").attr("data-bind", "ribbonitem: $data").appendTo($items);
+        const $content = $("<ul>").addClass("ribbon-group-content").attr("data-bind", "foreach: { data: content(), as: 'item' }").appendTo(root);
+        addComment($content.get(0), "ribbonitem: $data, cssclass: 'ribbon-group-item'");
 
         return root;
     },
@@ -871,27 +899,25 @@ handlers.ribbonitem = {
             data = ko.unwrap(valueAccessor()) as RibbonItem,
             handler = getRibbonItemHandler(data);
 
-        const root = document.createElement("div");
-        const el = document.createElement(element.tagName);
-        el.setAttribute("class", element.getAttribute("class"));
+        const root = createRoot();
+        const el = doc.createElement("li");
+        el.setAttribute("class", allBindingsAccessor.get("cssclass"));
         el.setAttribute("data-bind", data.getBindingString() + ", " + handler + ": $data");
+        
         root.appendChild(el);
         
         new ko.templateSources.anonymousTemplate(element).nodes(root);
-        
-        ko.renderTemplate(element, bindingContext, {}, element, "replaceNode");
+        ko.renderTemplate(element, bindingContext, {}, element);
         
         return { controlsDescendantBindings: true };
     }
 };
 
+ko.virtualElements.allowedBindings.ribbonitem = true;
+
 handlers.ribbonitembase = {
     init(element, valueAccessor) {
         const data = ko.unwrap(valueAccessor());
-        
-        if (typeof data.dispose === "function") {
-            ko.utils.domNodeDisposal.addDisposeCallback(element, () => { data.dispose(); });
-        }
         
         return { controlsDescendantBindings: !!ko.unwrap(data.template) };
     },
@@ -919,9 +945,9 @@ createTemplatedHandler("ribbonlist", {
     create() {
         const 
             root = createRoot(),
-            $ul = $("<ul>").addClass("ribbon-list-content").attr("data-bind", "foreach: { data: items, as: 'item' }").appendTo(root);
+            $ul = $("<ul>").addClass("ribbon-list-content").attr("data-bind", "foreach: { data: content, as: 'item' }").appendTo(root);
             
-        $("<li>").addClass("ribbon-list-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
+        addComment($ul.get(0), "ribbonitem: $data, cssclass: 'ribbon-list-item'");
         
         return root;
     },
@@ -934,9 +960,9 @@ createTemplatedHandler("ribbonform", {
     create() {
         const 
             root = createRoot(),
-            $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: { data: items, as: 'item' }").appendTo(root);
+            $ul = $("<ul>").addClass("ribbon-form-content").attr("data-bind", "css: { 'ribbon-form-inline': inline }, foreach: { data: content, as: 'item' }").appendTo(root);
             
-        $("<li>").addClass("ribbon-form-item").attr("data-bind", "ribbonitem: $data").appendTo($ul);
+        addComment($ul.get(0), "ribbonitem: $data, cssclass: 'ribbon-form-item'");
 
         return root;
     },
@@ -1030,7 +1056,9 @@ handlers.ribboninput = {
             type = ko.unwrap(input.type),
             color = false;
             
-        $(element).addClass("ribbon-input");
+        $(element)
+            .addClass("ribbon-input")
+            .addClass("ribbon-input-" + type);
 
         if (type === "color") {
             color = true;
@@ -1065,6 +1093,7 @@ handlers.ribboninput = {
             }
             else if (color) {
                 inputBinding = "colorpicker: value";
+                input.addDisposable(input.value.subscribe(() => { RibbonFlyout.slidingElement = element; }));
             }
             else if (input.valueUpdate) {
                 inputBinding = "value: value";
@@ -1088,8 +1117,6 @@ handlers.ribboninput = {
         $inputElement.appendTo(type === "checkbox" && $label ? $label : $container);
 
         new ko.templateSources.anonymousTemplate(element).nodes($container.get(0));
-
-        ko.utils.domNodeDisposal.addDisposeCallback(element, input.dispose.bind(input));
 
         return { controlsDescendantBindings: true };
     },
@@ -1142,6 +1169,14 @@ function stopEvent(e: JQueryEventObject) {
 
 function createRoot() {
     return doc.createElement("div");
+}
+
+function addComment(parent: Node, data: string) {
+    const start = doc.createComment("ko " + data);
+    const end = doc.createComment("/ko");
+    
+    parent.appendChild(start as Node);
+    parent.appendChild(end as Node);
 }
 
 //#endregion

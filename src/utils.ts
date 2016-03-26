@@ -50,16 +50,28 @@ export function createObservableArray(value: any, mapFunction?: (obj: any) => an
     return ko.observableArray(value);
 }
 
+const OLD_VALUES_PROPERTY = "__koui__oldValues__";
 /** Return a computed Array from value (or _default if undefined). If value is subscribable, returns value directly. */
 export function createComputedArray<T>(value: MaybeSubscribable<any[]>, mapFunction?: (obj: any) => T, context?: any): ko.PureComputed<T[]> {
-    return ko.pureComputed(() => {
+    const cpArray = ko.pureComputed(() => {
+        if (cpArray[OLD_VALUES_PROPERTY]) {
+            cpArray[OLD_VALUES_PROPERTY].forEach(d => { 
+                if (typeof d.dispose === "function") {
+                    d.dispose();
+                }
+            });
+        }
+        
         const val = ko.unwrap(value);
         if (!Array.isArray(val)) {
+            cpArray[OLD_VALUES_PROPERTY] = null;
             return [];
         }
         
-        return val.map(mapFunction, context);
+        return cpArray[OLD_VALUES_PROPERTY] = val.map(mapFunction, context);
     });
+    
+    return cpArray;
 }
 
 export function maybeObservable<T>(value: MaybeSubscribable<T>, _default?: T): MaybeSubscribable<T> {
@@ -149,17 +161,12 @@ export function createTemplatedHandler(name: string, bindingHandler: TemplatedBi
         oldInit = bindingHandler.init,
         beforeUpdate = bindingHandler.beforeUpdate;
     
-    bindingHandler.init = function(element, valueAccessor) {
+    bindingHandler.init = function() {
         oldInit && oldInit.apply(this, arguments);
         
         if (!bindingHandler.template) {
             let template = bindingHandler.template = bindingHandler.create();
             new ko.templateSources.anonymousTemplate(template).nodes(template);
-        }
-        
-        const data = ko.unwrap(valueAccessor());
-        if (typeof data.dispose === "function") {
-            ko.utils.domNodeDisposal.addDisposeCallback(element, data.dispose.bind(data));
         }
         
         return { controlsDescendantBindings: true };
