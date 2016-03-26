@@ -16,7 +16,7 @@
       You can see release notes at :
       https://github.com/spatools/koui
     </releaseNotes>
-    <copyright>Copyright 2014 - SPA Tools</copyright>
+    <copyright>Copyright 2016 - SPA Tools</copyright>
     <tags>
       Knockout,
       UI,
@@ -27,27 +27,39 @@
       AMD
     </tags>
     <dependencies>
-      <dependency id="KoUtils" version="1.0.1" />
+      <dependency id="Knockout" version="3.4.0" />
       <dependency id="JQuery" version="1.9.0" />
       <dependency id="RequireJS.Text" version="2.1.17" />
     </dependencies>
   </metadata>
   <files>
+    <file src="..\dist\css\contextmenu.css" target="Content\Scripts\koui\css" />
+    <file src="..\dist\css\ribbon.css" target="Content\Scripts\koui\css" />
+    <file src="..\dist\css\slider.css" target="Content\Scripts\koui\css" />
+    <file src="..\dist\css\tree.css" target="Content\Scripts\koui\css" />
     <file src="..\dist\animation.js" target="Content\Scripts\koui" />
+    <file src="..\dist\animation.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\contextmenu.js" target="Content\Scripts\koui" />
+    <file src="..\dist\contextmenu.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\contextmenu\container.html" target="Content\Scripts\koui\contextmenu" />
     <file src="..\dist\contextmenu\item.html" target="Content\Scripts\koui\contextmenu" />
     <file src="..\dist\draggable.js" target="Content\Scripts\koui" />
+    <file src="..\dist\draggable.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\engine.js" target="Content\Scripts\koui" />
+    <file src="..\dist\engine.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\event.js" target="Content\Scripts\koui" />
+    <file src="..\dist\event.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\ribbon.js" target="Content\Scripts\koui" />
+    <file src="..\dist\ribbon.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\slider.js" target="Content\Scripts\koui" />
-    <file src="..\dist\slider\container.html" target="Content\Scripts\koui\slider" />
+    <file src="..\dist\slider.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\tinymce.js" target="Content\Scripts\koui" />
+    <file src="..\dist\tinymce.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\tree.js" target="Content\Scripts\koui" />
+    <file src="..\dist\tree.d.ts" target="Content\Scripts\koui" />
     <file src="..\dist\tree\container.html" target="Content\Scripts\koui\tree" />
     <file src="..\dist\tree\item.html" target="Content\Scripts\koui\tree" />
     <file src="..\dist\utils.js" target="Content\Scripts\koui" />
-    <file src="..\dist\koui.d.ts" target="Content\Scripts\koui" />
+    <file src="..\dist\utils.d.ts" target="Content\Scripts\koui" />
   </files>
 </package>
