@@ -1,0 +1,37 @@
+{
+  "name": "koui",
+  "version": "1.0.0",
+  "authors": [
+    "SPA Tools"
+  ],
+  "description": "Knockout UI widgets to help Knockout app development",
+  "main": "koui.js",
+  "keywords": [
+    "knockout",
+    "knockoutjs",
+    "ko",
+    "mvvm",
+    "utilities",
+    "javascript",
+    "operation",
+    "command",
+    "spatools",
+    "amd"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/spatools/koui",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "typings",
+    "nuget",
+    "test"
+  ],
+  "dependencies": {
+    "knockout": "^3.4.0",
+    "jquery": ">=1.9.0",
+    "requirejs": "^2.2.0",
+    "text": "^2.0.14"
+  }
+}

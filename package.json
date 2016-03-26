@@ -1,0 +1,27 @@
+{
+  "name": "koui",
+  "version": "1.0.0",
+  "description": "Knockout UI widgets to help Knockout app development",
+  "main": "koui.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spatools/koui.git"
+  },
+  "keywords": [
+    "knockout",
+    "knockoutjs",
+    "ko",
+    "UI",
+    "binding",
+    "handlers",
+    "template",
+    "engine",
+    "spatools",
+    "amd"
+  ],
+  "author": "SPA Tools",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/spatools/koui/issues"
+  }
+}
